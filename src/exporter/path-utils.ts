@@ -33,6 +33,7 @@ export function renderImageNameTemplate(template: string, input: {
 	slug: string;
 	index: number;
 	hash: string;
+	filename: string;
 	original: string;
 	ext: string;
 	date: Date;
@@ -43,15 +44,25 @@ export function renderImageNameTemplate(template: string, input: {
 		String(input.date.getDate()).padStart(2, "0"),
 	].join("");
 
-	const rendered = template
-		.split("<slug>").join(input.slug)
-		.split("<index>").join(String(input.index).padStart(2, "0"))
-		.split("<hash>").join(input.hash)
-		.split("<original>").join(stripExtension(input.original))
-		.split("<ext>").join(input.ext)
-		.split("<date>").join(date);
+	const rendered = renderTemplateVariables(template, {
+		slug: input.slug,
+		index: String(input.index).padStart(2, "0"),
+		hash: input.hash,
+		filename: input.filename,
+		original: stripExtension(input.original),
+		ext: input.ext,
+		date,
+	});
 
 	return normalize(rendered).replace(/^(\.\.[/\\])+/, "").replace(/^[/\\]+/, "");
+}
+
+export function renderTemplateVariables(template: string, variables: Record<string, string>): string {
+	let rendered = template;
+	for (const [key, value] of Object.entries(variables)) {
+		rendered = rendered.split(`{{${key}}}`).join(value);
+	}
+	return rendered;
 }
 
 export function fileHash(absPath: string): string {

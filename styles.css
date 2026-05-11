@@ -1,1 +1,108 @@
+.hexo-bridge-ribbon-icon {
+	order: 50;
+}
 
+.hexo-bridge-view {
+	padding: 16px;
+}
+
+.hexo-bridge-controls,
+.hexo-bridge-pager,
+.hexo-bridge-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+
+.hexo-bridge-controls {
+	margin: 12px 0;
+}
+
+.hexo-bridge-controls input,
+.hexo-bridge-controls select {
+	min-width: 150px;
+}
+
+.hexo-bridge-summary {
+	margin: 8px 0;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+
+.hexo-bridge-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.hexo-bridge-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 12px;
+	align-items: start;
+	padding: 10px 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.hexo-bridge-title {
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+.hexo-bridge-path,
+.hexo-bridge-meta {
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+
+.hexo-bridge-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 4px;
+}
+
+.hexo-bridge-status {
+	border-radius: 4px;
+	padding: 1px 6px;
+	background: var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.hexo-bridge-status-synced {
+	background: rgba(var(--color-green-rgb), 0.18);
+}
+
+.hexo-bridge-status-modified {
+	background: rgba(var(--color-orange-rgb), 0.18);
+}
+
+.hexo-bridge-status-failed {
+	background: rgba(var(--color-red-rgb), 0.18);
+}
+
+.hexo-bridge-status-unsynced {
+	background: rgba(var(--color-yellow-rgb), 0.18);
+}
+
+.hexo-bridge-error {
+	flex-basis: 100%;
+	color: var(--text-error);
+	overflow-wrap: anywhere;
+}
+
+.hexo-bridge-empty {
+	color: var(--text-muted);
+	padding: 16px 0;
+}
+
+.hexo-bridge-pager {
+	margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+	.hexo-bridge-row {
+		grid-template-columns: 1fr;
+	}
+}

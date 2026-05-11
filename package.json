@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-hexo-bridge",
-	"version": "1.0.0",
-	"description": "Export Obsidian notes to a local Hexo blog with image handling and git commits.",
+	"version": "0.1.0",
+	"description": "Sync Obsidian notes to a GitHub-backed Hexo blog with image handling and status tracking.",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
@@ -26,4 +26,3 @@
 		"obsidian": "latest"
 	}
 }
-

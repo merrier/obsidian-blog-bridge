@@ -1,11 +1,10 @@
 {
 	"id": "obsidian-hexo-bridge",
-	"name": "Obsidian Hexo Bridge",
-	"version": "1.0.0",
-	"minAppVersion": "1.0.0",
-	"description": "Export Obsidian notes to a local Hexo blog with image handling and git commits.",
+	"name": "Hexo Bridge",
+	"version": "0.1.0",
+	"minAppVersion": "1.8.7",
+	"description": "Sync Obsidian notes to a GitHub-backed Hexo blog with image handling and status tracking.",
 	"author": "merrier",
 	"authorUrl": "https://github.com/merrier",
 	"isDesktopOnly": true
 }
-

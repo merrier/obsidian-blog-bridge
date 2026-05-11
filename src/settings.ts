@@ -1,30 +1,39 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
-import ObsidianHexoBridgePlugin from "./main";
+import { App, PluginSettingTab, SecretComponent, Setting, TFile, TFolder } from "obsidian";
+import { t } from "./i18n";
+import type ObsidianHexoBridgePlugin from "./main";
 
-export type ImageMode = "local" | "picgo";
+export type GitHubPublishMode = "direct" | "pullRequest";
 
 export interface HexoBridgeSettings {
-	hexoRoot: string;
+	githubOwner: string;
+	githubRepo: string;
+	githubBranch: string;
+	githubPublishMode: GitHubPublishMode;
+	githubPullRequestBranch: string;
+	githubTokenSecretName: string;
+	syncSourceDir: string;
+	applyTemplateOnNewNote: boolean;
+	hexoTemplatePath: string;
 	postsDir: string;
-	draftsDir: string;
-	imageMode: ImageMode;
 	localImageDir: string;
 	imageNameTemplate: string;
-	picgoCommand: string;
 	gitCommitMessageTemplate: string;
-	commitSourceMetadata: boolean;
 }
 
 export const DEFAULT_SETTINGS: HexoBridgeSettings = {
-	hexoRoot: "/Users/merrier/repos/merrier.github.io",
+	githubOwner: "",
+	githubRepo: "",
+	githubBranch: "main",
+	githubPublishMode: "direct",
+	githubPullRequestBranch: "hexo-bridge/sync",
+	githubTokenSecretName: "",
+	syncSourceDir: "",
+	applyTemplateOnNewNote: false,
+	hexoTemplatePath: "",
 	postsDir: "source/_posts",
-	draftsDir: "source/_drafts",
-	imageMode: "local",
 	localImageDir: "source/images/obsidian",
-	imageNameTemplate: "<slug>/<index>-<hash>.<ext>",
-	picgoCommand: "picgo upload",
-	gitCommitMessageTemplate: "chore(hexo): export <title>",
-	commitSourceMetadata: true,
+	imageNameTemplate: "{{slug}}/{{filename}}",
+	gitCommitMessageTemplate: "chore(hexo): export {{title}}",
 };
 
 export class HexoBridgeSettingTab extends PluginSettingTab {
@@ -40,19 +49,125 @@ export class HexoBridgeSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName("Hexo root")
-			.setDesc("Absolute path to the Hexo repository.")
+			.setName(t("settingsGitHubOwnerName"))
+			.setDesc(t("settingsGitHubOwnerDesc"))
 			.addText((text) => text
-				.setPlaceholder(DEFAULT_SETTINGS.hexoRoot)
-				.setValue(this.plugin.settings.hexoRoot)
+				.setPlaceholder("merrier")
+				.setValue(this.plugin.settings.githubOwner)
 				.onChange(async (value) => {
-					this.plugin.settings.hexoRoot = value.trim();
+					this.plugin.settings.githubOwner = value.trim();
 					await this.plugin.saveSettings();
 				}));
 
 		new Setting(containerEl)
-			.setName("Posts directory")
-			.setDesc("Relative to Hexo root.")
+			.setName(t("settingsGitHubRepoName"))
+			.setDesc(t("settingsGitHubRepoDesc"))
+			.addText((text) => text
+				.setPlaceholder("merrier.github.io")
+				.setValue(this.plugin.settings.githubRepo)
+				.onChange(async (value) => {
+					this.plugin.settings.githubRepo = value.trim();
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName(t("settingsGitHubBranchName"))
+			.setDesc(t("settingsGitHubBranchDesc"))
+			.addText((text) => text
+				.setPlaceholder(DEFAULT_SETTINGS.githubBranch)
+				.setValue(this.plugin.settings.githubBranch)
+				.onChange(async (value) => {
+					this.plugin.settings.githubBranch = value.trim() || DEFAULT_SETTINGS.githubBranch;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName(t("settingsGitHubPublishModeName"))
+			.setDesc(t("settingsGitHubPublishModeDesc"))
+			.addDropdown((dropdown) => dropdown
+				.addOption("direct", t("settingsGitHubPublishModeDirect"))
+				.addOption("pullRequest", t("settingsGitHubPublishModePullRequest"))
+				.setValue(this.plugin.settings.githubPublishMode)
+				.onChange(async (value) => {
+					this.plugin.settings.githubPublishMode = value === "pullRequest" ? "pullRequest" : "direct";
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName(t("settingsGitHubPullRequestBranchName"))
+			.setDesc(t("settingsGitHubPullRequestBranchDesc"))
+			.addText((text) => text
+				.setPlaceholder(DEFAULT_SETTINGS.githubPullRequestBranch)
+				.setValue(this.plugin.settings.githubPullRequestBranch)
+				.onChange(async (value) => {
+					this.plugin.settings.githubPullRequestBranch = normalizeBranchSetting(value, DEFAULT_SETTINGS.githubPullRequestBranch);
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName(t("settingsGitHubTokenName"))
+			.setDesc(t("settingsGitHubTokenDesc"))
+			.addComponent((el) => new SecretComponent(this.app, el)
+				.setValue(this.plugin.settings.githubTokenSecretName)
+				.onChange(async (value) => {
+					this.plugin.settings.githubTokenSecretName = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName(t("settingsSyncSourceDirName"))
+			.setDesc(t("settingsSyncSourceDirDesc"))
+			.addDropdown((dropdown) => {
+				const folders = getVaultFolderOptions(this.app);
+				dropdown.addOption("", t("settingsAllMarkdownFiles"));
+				for (const folder of folders) {
+					dropdown.addOption(folder, folder);
+				}
+				if (this.plugin.settings.syncSourceDir && !folders.includes(this.plugin.settings.syncSourceDir)) {
+					dropdown.addOption(this.plugin.settings.syncSourceDir, t("settingsMissingPath", { path: this.plugin.settings.syncSourceDir }));
+				}
+				return dropdown
+					.setValue(this.plugin.settings.syncSourceDir)
+					.onChange(async (value) => {
+						this.plugin.settings.syncSourceDir = normalizeRelativeSetting(value, DEFAULT_SETTINGS.syncSourceDir);
+						await this.plugin.saveSettings();
+						this.plugin.refreshStatusViews();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName(t("settingsHexoTemplateName"))
+			.setDesc(t("settingsHexoTemplateDesc"))
+			.addDropdown((dropdown) => {
+				const files = getMarkdownFileOptions(this.app);
+				dropdown.addOption("", t("settingsNoTemplate"));
+				for (const file of files) {
+					dropdown.addOption(file, file);
+				}
+				if (this.plugin.settings.hexoTemplatePath && !files.includes(this.plugin.settings.hexoTemplatePath)) {
+					dropdown.addOption(this.plugin.settings.hexoTemplatePath, t("settingsMissingPath", { path: this.plugin.settings.hexoTemplatePath }));
+				}
+				return dropdown
+					.setValue(this.plugin.settings.hexoTemplatePath)
+					.onChange(async (value) => {
+						this.plugin.settings.hexoTemplatePath = normalizeRelativeSetting(value, DEFAULT_SETTINGS.hexoTemplatePath);
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName(t("settingsApplyTemplateName"))
+			.setDesc(t("settingsApplyTemplateDesc"))
+			.addToggle((toggle) => toggle
+				.setValue(this.plugin.settings.applyTemplateOnNewNote)
+				.onChange(async (value) => {
+					this.plugin.settings.applyTemplateOnNewNote = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName(t("settingsPostsDirName"))
+			.setDesc(t("settingsPostsDirDesc"))
 			.addText((text) => text
 				.setPlaceholder(DEFAULT_SETTINGS.postsDir)
 				.setValue(this.plugin.settings.postsDir)
@@ -62,31 +177,8 @@ export class HexoBridgeSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName("Drafts directory")
-			.setDesc("Relative to Hexo root.")
-			.addText((text) => text
-				.setPlaceholder(DEFAULT_SETTINGS.draftsDir)
-				.setValue(this.plugin.settings.draftsDir)
-				.onChange(async (value) => {
-					this.plugin.settings.draftsDir = normalizeRelativeSetting(value, DEFAULT_SETTINGS.draftsDir);
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName("Image mode")
-			.setDesc("Local copies images into the Hexo repo. PicGo uploads through your PicGo configuration.")
-			.addDropdown((dropdown) => dropdown
-				.addOption("local", "Local")
-				.addOption("picgo", "PicGo")
-				.setValue(this.plugin.settings.imageMode)
-				.onChange(async (value) => {
-					this.plugin.settings.imageMode = value as "local" | "picgo";
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName("Local image directory")
-			.setDesc("Relative to Hexo root. Used when image mode is Local.")
+			.setName(t("settingsLocalImageDirName"))
+			.setDesc(t("settingsLocalImageDirDesc"))
 			.addText((text) => text
 				.setPlaceholder(DEFAULT_SETTINGS.localImageDir)
 				.setValue(this.plugin.settings.localImageDir)
@@ -96,8 +188,8 @@ export class HexoBridgeSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName("Image name template")
-			.setDesc("Variables: <slug>, <index>, <hash>, <original>, <ext>, <date>.")
+			.setName(t("settingsImageNameTemplateName"))
+			.setDesc(t("settingsImageNameTemplateDesc"))
 			.addText((text) => text
 				.setPlaceholder(DEFAULT_SETTINGS.imageNameTemplate)
 				.setValue(this.plugin.settings.imageNameTemplate)
@@ -107,19 +199,8 @@ export class HexoBridgeSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName("PicGo command")
-			.setDesc("Used when image mode is PicGo. The image path is appended and shell-quoted.")
-			.addText((text) => text
-				.setPlaceholder(DEFAULT_SETTINGS.picgoCommand)
-				.setValue(this.plugin.settings.picgoCommand)
-				.onChange(async (value) => {
-					this.plugin.settings.picgoCommand = value.trim() || DEFAULT_SETTINGS.picgoCommand;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName("Git commit message template")
-			.setDesc("Variables: <title>, <slug>, <status>.")
+			.setName(t("settingsCommitMessageName"))
+			.setDesc(t("settingsCommitMessageDesc"))
 			.addText((text) => text
 				.setPlaceholder(DEFAULT_SETTINGS.gitCommitMessageTemplate)
 				.setValue(this.plugin.settings.gitCommitMessageTemplate)
@@ -127,21 +208,40 @@ export class HexoBridgeSettingTab extends PluginSettingTab {
 					this.plugin.settings.gitCommitMessageTemplate = value.trim() || DEFAULT_SETTINGS.gitCommitMessageTemplate;
 					await this.plugin.saveSettings();
 				}));
-
-		new Setting(containerEl)
-			.setName("Commit source note metadata")
-			.setDesc("Commit only the exported source note in the vault repo after writing hexoBridge metadata.")
-			.addToggle((toggle) => toggle
-				.setValue(this.plugin.settings.commitSourceMetadata)
-				.onChange(async (value) => {
-					this.plugin.settings.commitSourceMetadata = value;
-					await this.plugin.saveSettings();
-				}));
 	}
 }
 
-function normalizeRelativeSetting(value: string, fallback: string): string {
-	const normalized = value.trim().replace(/^\/+/, "").replace(/\\/g, "/");
-	return normalized || fallback;
+function getVaultFolderOptions(app: App): string[] {
+	return app.vault.getAllLoadedFiles()
+		.filter((file): file is TFolder => file instanceof TFolder && file.path !== "/" && file.path !== "")
+		.map((folder) => folder.path)
+		.sort((a, b) => a.localeCompare(b));
 }
 
+function getMarkdownFileOptions(app: App): string[] {
+	return app.vault.getMarkdownFiles()
+		.map((file: TFile) => file.path)
+		.sort((a, b) => a.localeCompare(b));
+}
+
+function normalizeRelativeSetting(value: string, fallback: string): string {
+	const normalized = value.trim().replace(/^\/+/, "").replace(/\\/g, "/").replace(/\/+/g, "/");
+	if (!normalized || normalized === ".") {
+		return fallback;
+	}
+	const segments = normalized.split("/").filter((segment) => segment && segment !== ".");
+	if (segments.some((segment) => segment === "..")) {
+		return fallback;
+	}
+	return segments.join("/");
+}
+
+function normalizeBranchSetting(value: string, fallback: string): string {
+	const normalized = value
+		.trim()
+		.replace(/^refs\/heads\//, "")
+		.replace(/\\/g, "/")
+		.replace(/^\/+|\/+$/g, "")
+		.replace(/\/+/g, "/");
+	return normalized || fallback;
+}

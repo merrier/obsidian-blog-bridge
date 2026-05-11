@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620" role="img" aria-labelledby="title desc">
+  <title id="title">Hexo Bridge settings</title>
+  <desc id="desc">A preview of Hexo Bridge settings for GitHub repository, sync mode, source directory, template, and image paths.</desc>
+  <rect width="1120" height="620" fill="#f6f7f9"/>
+  <rect x="48" y="42" width="1024" height="536" rx="12" fill="#ffffff" stroke="#d7dce2"/>
+  <text x="86" y="96" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">Hexo Bridge Settings</text>
+  <g font-family="Inter, Arial, sans-serif">
+    <text x="86" y="154" fill="#111827" font-size="17" font-weight="700">GitHub owner</text>
+    <text x="86" y="178" fill="#6b7280" font-size="14">User or organization that owns the Hexo repository.</text>
+    <rect x="704" y="134" width="300" height="42" rx="8" fill="#f9fafb" stroke="#cfd6df"/>
+    <text x="724" y="161" fill="#111827" font-size="15">merrier</text>
+    <line x1="86" y1="202" x2="1034" y2="202" stroke="#e5e7eb"/>
+    <text x="86" y="250" fill="#111827" font-size="17" font-weight="700">GitHub repository</text>
+    <text x="86" y="274" fill="#6b7280" font-size="14">Repository name without the owner.</text>
+    <rect x="704" y="230" width="300" height="42" rx="8" fill="#f9fafb" stroke="#cfd6df"/>
+    <text x="724" y="257" fill="#111827" font-size="15">merrier.github.io</text>
+    <line x1="86" y1="298" x2="1034" y2="298" stroke="#e5e7eb"/>
+    <text x="86" y="346" fill="#111827" font-size="17" font-weight="700">Sync mode</text>
+    <text x="86" y="370" fill="#6b7280" font-size="14">Choose direct commit or Pull Request / MR.</text>
+    <rect x="704" y="326" width="300" height="42" rx="8" fill="#f9fafb" stroke="#cfd6df"/>
+    <text x="724" y="353" fill="#111827" font-size="15">Pull Request / MR</text>
+    <path d="M970 343l7 8 7-8" fill="none" stroke="#6b7280" stroke-width="2"/>
+    <line x1="86" y1="394" x2="1034" y2="394" stroke="#e5e7eb"/>
+    <text x="86" y="442" fill="#111827" font-size="17" font-weight="700">MR branch</text>
+    <text x="86" y="466" fill="#6b7280" font-size="14">Branch used for Pull Request / MR sync.</text>
+    <rect x="704" y="422" width="300" height="42" rx="8" fill="#f9fafb" stroke="#cfd6df"/>
+    <text x="724" y="449" fill="#111827" font-size="15">hexo-bridge/sync</text>
+    <line x1="86" y1="490" x2="1034" y2="490" stroke="#e5e7eb"/>
+    <text x="86" y="538" fill="#111827" font-size="17" font-weight="700">Image name template</text>
+    <text x="86" y="562" fill="#6b7280" font-size="14">Variables: {{filename}}, {{slug}}, {{index}}, {{hash}}</text>
+    <rect x="704" y="518" width="300" height="42" rx="8" fill="#f9fafb" stroke="#cfd6df"/>
+    <text x="724" y="545" fill="#111827" font-size="15">{{slug}}/{{filename}}</text>
+  </g>
+</svg>

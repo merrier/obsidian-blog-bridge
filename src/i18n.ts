@@ -1,0 +1,166 @@
+import { getLanguage } from "obsidian";
+
+const EN = {
+	ribbonOpenStatus: "Open Hexo Bridge sync status",
+	commandSyncCurrentNote: "Sync current note to Hexo post",
+	commandOpenSettings: "Open Hexo Bridge settings",
+
+	noticeAlreadySyncing: "This note is already syncing.",
+	errorDesktopVault: "Hexo Bridge requires a desktop vault backed by the local file system.",
+	noticeSynced: "Synced %{title} (%{sha}).",
+	noticeSyncedWithPullRequest: "Synced %{title} (%{sha}) and opened PR #%{number}.",
+	noticeSyncFailed: "Hexo sync failed: %{message}",
+	noticeOpenMarkdown: "Open a Markdown note before syncing.",
+	noticeTemplateNotFound: "Hexo template was not found: %{path}",
+	errorOwnerRequired: "GitHub owner is required.",
+	errorRepoRequired: "GitHub repository is required.",
+	errorBranchRequired: "GitHub branch is required.",
+	errorPullRequestBranchRequired: "MR branch is required when sync mode is Pull Request / MR.",
+	errorPullRequestBranchMatchesBase: "MR branch must be different from the target branch.",
+	errorTokenSecretRequired: "GitHub token secret is required.",
+	errorTokenSecretMissing: "GitHub token secret was not found: %{secretName}",
+	errorTokenPrefix: "GitHub token must start with %{prefix}.",
+
+	settingsGitHubOwnerName: "GitHub owner",
+	settingsGitHubOwnerDesc: "User or organization that owns the Hexo repository.",
+	settingsGitHubRepoName: "GitHub repository",
+	settingsGitHubRepoDesc: "Repository name without the owner.",
+	settingsGitHubBranchName: "GitHub branch",
+	settingsGitHubBranchDesc: "Target branch. The branch must already exist.",
+	settingsGitHubPublishModeName: "Sync mode",
+	settingsGitHubPublishModeDesc: "Choose whether to update the target branch directly or create a Pull Request / MR.",
+	settingsGitHubPublishModeDirect: "Direct commit",
+	settingsGitHubPublishModePullRequest: "Pull Request / MR",
+	settingsGitHubPullRequestBranchName: "MR branch",
+	settingsGitHubPullRequestBranchDesc: "Branch used for Pull Request / MR sync. It must be different from the target branch.",
+	settingsGitHubTokenName: "GitHub token",
+	settingsGitHubTokenDesc: "Select a SecretStorage entry for a ghp_ token with Contents read/write access. Pull Request / MR mode also needs pull request write access.",
+	settingsSyncSourceDirName: "Sync source directory",
+	settingsSyncSourceDirDesc: "Vault folder to list in the status page.",
+	settingsAllMarkdownFiles: "All Markdown files",
+	settingsMissingPath: "%{path} (missing)",
+	settingsHexoTemplateName: "Hexo note template",
+	settingsHexoTemplateDesc: "Markdown template for new notes. Variables: {{title}}, {{slug}}, {{date}}, {{datetime}}.",
+	settingsNoTemplate: "No template",
+	settingsApplyTemplateName: "Apply template to new notes",
+	settingsApplyTemplateDesc: "Automatically copy the selected template into new empty notes created in the sync source directory.",
+	settingsPostsDirName: "Posts directory",
+	settingsPostsDirDesc: "Path in the GitHub repository for published posts.",
+	settingsLocalImageDirName: "Local image directory",
+	settingsLocalImageDirDesc: "Path in the GitHub repository for committed local images.",
+	settingsImageNameTemplateName: "Image name template",
+	settingsImageNameTemplateDesc: "Variables: {{filename}}, {{slug}}, {{index}}, {{hash}}, {{original}}, {{ext}}, {{date}}.",
+	settingsCommitMessageName: "Git commit message template",
+	settingsCommitMessageDesc: "Variables: {{title}}, {{slug}}, {{status}}. Status is always post.",
+
+	statusSearchTitle: "Search title",
+	statusFilterTag: "Filter tag",
+	statusAll: "All",
+	statusUnsynced: "Unsynced",
+	statusSynced: "Synced",
+	statusModified: "Modified",
+	statusFailed: "Failed",
+	statusSearchButton: "Search",
+	statusSummary: "%{count} notes · page %{page}/%{totalPages}",
+	statusEmpty: "No matching notes.",
+	statusPrevious: "Previous",
+	statusNext: "Next",
+	statusLastSynced: "Synced %{time}",
+	statusModifiedSinceSync: "Modified locally after last sync",
+	statusLastAttempted: "Attempted %{time}",
+	statusPullRequest: "PR #%{number}",
+	statusSyncing: "Syncing",
+	statusSync: "Sync",
+} as const;
+
+type TranslationKey = keyof typeof EN;
+type TranslationValue = string | number | boolean | null | undefined;
+
+const ZH: Partial<Record<TranslationKey, string>> = {
+	ribbonOpenStatus: "打开 Hexo Bridge 同步状态",
+	commandSyncCurrentNote: "同步当前笔记到 Hexo 文章",
+	commandOpenSettings: "打开 Hexo Bridge 设置",
+
+	noticeAlreadySyncing: "这篇笔记正在同步。",
+	errorDesktopVault: "Hexo Bridge 需要使用本地文件系统的桌面端库。",
+	noticeSynced: "已同步 %{title}（%{sha}）。",
+	noticeSyncedWithPullRequest: "已同步 %{title}（%{sha}），并打开 PR #%{number}。",
+	noticeSyncFailed: "Hexo 同步失败：%{message}",
+	noticeOpenMarkdown: "请先打开一篇 Markdown 笔记再同步。",
+	noticeTemplateNotFound: "找不到 Hexo 模板：%{path}",
+	errorOwnerRequired: "请填写 GitHub 所有者。",
+	errorRepoRequired: "请填写 GitHub 仓库。",
+	errorBranchRequired: "请填写 GitHub 分支。",
+	errorPullRequestBranchRequired: "选择 Pull Request / MR 同步模式时，请填写 MR 分支。",
+	errorPullRequestBranchMatchesBase: "MR 分支不能和目标分支相同。",
+	errorTokenSecretRequired: "请选择 GitHub token secret。",
+	errorTokenSecretMissing: "找不到 GitHub token secret：%{secretName}",
+	errorTokenPrefix: "GitHub token 必须以 %{prefix} 开头。",
+
+	settingsGitHubOwnerName: "GitHub 所有者",
+	settingsGitHubOwnerDesc: "Hexo 仓库所属的用户或组织。",
+	settingsGitHubRepoName: "GitHub 仓库",
+	settingsGitHubRepoDesc: "不包含所有者的仓库名。",
+	settingsGitHubBranchName: "GitHub 分支",
+	settingsGitHubBranchDesc: "目标分支，需要已存在。",
+	settingsGitHubPublishModeName: "同步方式",
+	settingsGitHubPublishModeDesc: "选择直接更新目标分支，或创建 Pull Request / MR。",
+	settingsGitHubPublishModeDirect: "直接提交",
+	settingsGitHubPublishModePullRequest: "Pull Request / MR",
+	settingsGitHubPullRequestBranchName: "MR 分支",
+	settingsGitHubPullRequestBranchDesc: "Pull Request / MR 同步时使用的分支，不能和目标分支相同。",
+	settingsGitHubTokenName: "GitHub token",
+	settingsGitHubTokenDesc: "选择一个 SecretStorage 条目，token 需以 ghp_ 开头并具备 Contents 读写权限。Pull Request / MR 模式还需要 pull request 写权限。",
+	settingsSyncSourceDirName: "同步来源目录",
+	settingsSyncSourceDirDesc: "状态页展示和同步的 Vault 目录。",
+	settingsAllMarkdownFiles: "所有 Markdown 文件",
+	settingsMissingPath: "%{path}（缺失）",
+	settingsHexoTemplateName: "Hexo 笔记模板",
+	settingsHexoTemplateDesc: "新笔记使用的 Markdown 模板。变量：{{title}}、{{slug}}、{{date}}、{{datetime}}。",
+	settingsNoTemplate: "不使用模板",
+	settingsApplyTemplateName: "为新笔记套用模板",
+	settingsApplyTemplateDesc: "在同步来源目录中新建空笔记时，自动复制所选模板内容。",
+	settingsPostsDirName: "文章目录",
+	settingsPostsDirDesc: "GitHub 仓库中已发布文章的路径。",
+	settingsLocalImageDirName: "本地图片目录",
+	settingsLocalImageDirDesc: "GitHub 仓库中提交本地图片的路径。",
+	settingsImageNameTemplateName: "图片命名模板",
+	settingsImageNameTemplateDesc: "变量：{{filename}}、{{slug}}、{{index}}、{{hash}}、{{original}}、{{ext}}、{{date}}。",
+	settingsCommitMessageName: "Git commit 消息模板",
+	settingsCommitMessageDesc: "变量：{{title}}、{{slug}}、{{status}}。status 固定为 post。",
+
+	statusSearchTitle: "搜索标题",
+	statusFilterTag: "筛选标签",
+	statusAll: "全部",
+	statusUnsynced: "未同步",
+	statusSynced: "已同步",
+	statusModified: "有修改",
+	statusFailed: "失败",
+	statusSearchButton: "查询",
+	statusSummary: "%{count} 篇 · 第 %{page}/%{totalPages} 页",
+	statusEmpty: "没有匹配的笔记。",
+	statusPrevious: "上一页",
+	statusNext: "下一页",
+	statusLastSynced: "已同步 %{time}",
+	statusModifiedSinceSync: "本地已在上次同步后修改",
+	statusLastAttempted: "已尝试 %{time}",
+	statusPullRequest: "PR #%{number}",
+	statusSyncing: "同步中",
+	statusSync: "同步",
+};
+
+export function t(key: TranslationKey, values: Record<string, TranslationValue> = {}): string {
+	const source = isChineseLanguage() ? ZH[key] ?? EN[key] : EN[key];
+	return source.replace(/%\{(\w+)\}/g, (_match: string, name: string) => {
+		const value = values[name];
+		return value === null || value === undefined ? "" : String(value);
+	});
+}
+
+export function getCurrentLanguage(): string {
+	return getLanguage() || "en";
+}
+
+function isChineseLanguage(): boolean {
+	return getCurrentLanguage().toLowerCase().startsWith("zh");
+}

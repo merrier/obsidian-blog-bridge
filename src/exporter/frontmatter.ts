@@ -61,22 +61,6 @@ export function ensureHexoDefaults(frontmatter: Frontmatter, title: string, now:
 	return next;
 }
 
-export function updateBridgeMetadata(
-	frontmatter: Frontmatter,
-	metadata: {
-		status: string;
-		targetPath: string;
-		exportedAt: string;
-		imageMode: string;
-		commit: string;
-	}
-): Frontmatter {
-	return {
-		...frontmatter,
-		hexoBridge: metadata,
-	};
-}
-
 export function formatHexoDate(date: Date): string {
 	const pad = (value: number) => String(value).padStart(2, "0");
 	return [
@@ -93,4 +77,3 @@ export function formatHexoDate(date: Date): string {
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-
