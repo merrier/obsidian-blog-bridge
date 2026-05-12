@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1440" />
+  <title>Blog Bridge 小红书封面</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      width: 1080px;
+      height: 1440px;
+      overflow: hidden;
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #101828;
+      background: #f4f6f8;
+    }
+
+    .canvas {
+      position: relative;
+      width: 1080px;
+      height: 1440px;
+      padding: 64px;
+      background:
+        radial-gradient(circle at 18% 14%, rgba(124, 58, 237, 0.12), transparent 260px),
+        radial-gradient(circle at 86% 76%, rgba(37, 99, 235, 0.12), transparent 320px),
+        linear-gradient(180deg, #f7f8fb 0%, #eef2f7 100%);
+    }
+
+    .panel {
+      position: relative;
+      width: 952px;
+      height: 1312px;
+      padding: 74px 76px 68px;
+      border-radius: 34px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 36px 100px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 12px;
+      background: linear-gradient(90deg, #111827, #4f46e5, #2563eb);
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 72px;
+    }
+
+    .brand {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .badge {
+      padding: 16px 24px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 30px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 22px;
+      border: 2px solid #dbe3ef;
+      border-radius: 999px;
+      color: #475467;
+      font-size: 30px;
+      font-weight: 600;
+      margin-bottom: 34px;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #2563eb;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 108px;
+      line-height: 1.12;
+      font-weight: 900;
+      letter-spacing: 0;
+      color: #111827;
+    }
+
+    .accent {
+      display: block;
+      color: #2563eb;
+    }
+
+    .subtitle {
+      width: 780px;
+      margin: 44px 0 62px;
+      color: #475467;
+      font-size: 48px;
+      line-height: 1.45;
+      font-weight: 500;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr 68px 1fr 68px 1fr;
+      align-items: center;
+      margin: 0 0 60px;
+    }
+
+    .step {
+      min-height: 138px;
+      padding: 26px 18px;
+      border: 2px solid #e4e7ec;
+      border-radius: 22px;
+      background: #f9fafb;
+      text-align: center;
+    }
+
+    .step strong {
+      display: block;
+      margin-bottom: 10px;
+      color: #101828;
+      font-size: 34px;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+
+    .step span {
+      color: #667085;
+      font-size: 24px;
+      line-height: 1.25;
+      font-weight: 500;
+    }
+
+    .arrow {
+      color: #98a2b3;
+      font-size: 42px;
+      text-align: center;
+      font-weight: 300;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 12px;
+    }
+
+    .feature {
+      padding: 22px 24px;
+      border-radius: 18px;
+      background: #f2f4f7;
+      color: #344054;
+      font-size: 30px;
+      line-height: 1.25;
+      font-weight: 650;
+    }
+
+    .footer {
+      position: absolute;
+      left: 76px;
+      right: 76px;
+      bottom: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #667085;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .frameworks {
+      color: #344054;
+    }
+  </style>
+</head>
+<body>
+  <main class="canvas">
+    <section class="panel">
+      <div class="topline">
+        <div class="brand">Blog Bridge</div>
+        <div class="badge">Obsidian 插件</div>
+      </div>
+
+      <div class="eyebrow"><span class="dot"></span>给 Markdown 博客用户</div>
+
+      <h1>
+        Obsidian 写完
+        <span class="accent">直接同步博客</span>
+      </h1>
+
+      <p class="subtitle">文章、图片、frontmatter、GitHub commit，一次处理干净。</p>
+
+      <div class="flow">
+        <div class="step"><strong>写作</strong><span>Obsidian</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><strong>同步</strong><span>Blog Bridge</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><strong>部署</strong><span>GitHub Blog</span></div>
+      </div>
+
+      <div class="features">
+        <div class="feature">本地图片一起提交</div>
+        <div class="feature">支持直接提交或 PR</div>
+        <div class="feature">自动补齐标题日期</div>
+        <div class="feature">状态页跟踪修改</div>
+      </div>
+
+      <div class="footer">
+        <div>少一点搬运，多一点写作</div>
+        <div class="frameworks">Hexo / Hugo / Astro</div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
