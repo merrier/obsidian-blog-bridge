@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-blog-bridge",
-	"version": "0.1.1",
+	"version": "1.0.0",
 	"description": "Sync Obsidian notes to GitHub-backed Markdown static-site blogs with image handling and status tracking.",
 	"main": "main.js",
 	"type": "module",
