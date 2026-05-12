@@ -2,9 +2,10 @@ import { FileSystemAdapter, Notice, Plugin, TFile } from "obsidian";
 import { exportCurrentNote } from "./exporter/exporter";
 import { renderTemplateVariables } from "./exporter/path-utils";
 import { ExportResult } from "./exporter/types";
+import { frameworkPreset, normalizeFrameworkId } from "./frameworks";
 import { t } from "./i18n";
-import { DEFAULT_SETTINGS, HexoBridgeSettings, HexoBridgeSettingTab } from "./settings";
-import { HexoBridgeStatusView, VIEW_TYPE_HEXO_BRIDGE_STATUS } from "./status-view";
+import { BlogBridgeSettings, BlogBridgeSettingTab, DEFAULT_SETTINGS } from "./settings";
+import { BlogBridgeStatusView, VIEW_TYPE_BLOG_BRIDGE_STATUS } from "./status-view";
 
 const GITHUB_TOKEN_PREFIX = "ghp_";
 
@@ -26,29 +27,29 @@ export interface SyncRecord {
 	pullRequestBranch?: string;
 }
 
-interface HexoBridgePluginData {
-	settings: HexoBridgeSettings;
+interface BlogBridgePluginData {
+	settings: BlogBridgeSettings;
 	syncRecords: Record<string, SyncRecord>;
 }
 
-export default class ObsidianHexoBridgePlugin extends Plugin {
-	settings: HexoBridgeSettings;
+export default class ObsidianBlogBridgePlugin extends Plugin {
+	settings: BlogBridgeSettings;
 	syncRecords: Record<string, SyncRecord> = {};
 	syncingPaths = new Set<string>();
 
 	async onload() {
 		await this.loadPluginData();
 
-		this.registerView(VIEW_TYPE_HEXO_BRIDGE_STATUS, (leaf) => new HexoBridgeStatusView(leaf, this));
+		this.registerView(VIEW_TYPE_BLOG_BRIDGE_STATUS, (leaf) => new BlogBridgeStatusView(leaf, this));
 
 		const ribbonIcon = this.addRibbonIcon("send", t("ribbonOpenStatus"), async () => {
 			await this.activateStatusView();
 		});
-		ribbonIcon.addClass("hexo-bridge-ribbon-icon");
+		ribbonIcon.addClass("blog-bridge-ribbon-icon");
 		ribbonIcon.style.order = "50";
 
 		this.addCommand({
-			id: "export-current-note-to-hexo-post",
+			id: "sync-current-note-to-blog-post",
 			name: t("commandSyncCurrentNote"),
 			callback: async () => {
 				await this.syncActiveNote();
@@ -56,7 +57,7 @@ export default class ObsidianHexoBridgePlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: "open-hexo-bridge-settings",
+			id: "open-blog-bridge-settings",
 			name: t("commandOpenSettings"),
 			callback: () => {
 				(this.app as unknown as { setting: { open(): void; openTabById(id: string): void } }).setting.open();
@@ -64,7 +65,7 @@ export default class ObsidianHexoBridgePlugin extends Plugin {
 			},
 		});
 
-		this.addSettingTab(new HexoBridgeSettingTab(this.app, this));
+		this.addSettingTab(new BlogBridgeSettingTab(this.app, this));
 		this.registerEvent(this.app.vault.on("create", (file) => {
 			void this.applyTemplateToNewNote(file);
 		}));
@@ -76,7 +77,7 @@ export default class ObsidianHexoBridgePlugin extends Plugin {
 	}
 
 	async loadPluginData() {
-		const raw = await this.loadData() as Partial<HexoBridgePluginData & HexoBridgeSettings> | null;
+		const raw = await this.loadData() as Partial<BlogBridgePluginData & BlogBridgeSettings> | null;
 		const rawSettings = raw && isRecord(raw.settings) ? raw.settings : raw;
 		this.settings = normalizeSettings(rawSettings);
 		this.syncRecords = raw && isRecord(raw.syncRecords)
@@ -92,22 +93,22 @@ export default class ObsidianHexoBridgePlugin extends Plugin {
 		await this.saveData({
 			settings: this.settings,
 			syncRecords: this.syncRecords,
-		} satisfies HexoBridgePluginData);
+		} satisfies BlogBridgePluginData);
 	}
 
 	async activateStatusView() {
-		const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_HEXO_BRIDGE_STATUS);
+		const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_BLOG_BRIDGE_STATUS);
 		const leaf = leaves[0] ?? this.app.workspace.getLeaf(true);
 		await leaf.setViewState({
-			type: VIEW_TYPE_HEXO_BRIDGE_STATUS,
+			type: VIEW_TYPE_BLOG_BRIDGE_STATUS,
 			active: true,
 		});
 		this.app.workspace.revealLeaf(leaf);
 	}
 
 	refreshStatusViews() {
-		for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_HEXO_BRIDGE_STATUS)) {
-			if (leaf.view instanceof HexoBridgeStatusView) {
+		for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_BLOG_BRIDGE_STATUS)) {
+			if (leaf.view instanceof BlogBridgeStatusView) {
 				leaf.view.render();
 			}
 		}
@@ -211,7 +212,7 @@ export default class ObsidianHexoBridgePlugin extends Plugin {
 		if (!(file instanceof TFile) || file.extension !== "md") {
 			return;
 		}
-		if (!this.settings.applyTemplateOnNewNote || !this.settings.hexoTemplatePath || file.path === this.settings.hexoTemplatePath) {
+		if (!this.settings.applyTemplateOnNewNote || !this.settings.templatePath || file.path === this.settings.templatePath) {
 			return;
 		}
 		if (!this.isInSyncSourceDir(file.path)) {
@@ -228,9 +229,9 @@ export default class ObsidianHexoBridgePlugin extends Plugin {
 			return;
 		}
 
-		const template = this.app.vault.getAbstractFileByPath(this.settings.hexoTemplatePath);
+		const template = this.app.vault.getAbstractFileByPath(this.settings.templatePath);
 		if (!(template instanceof TFile)) {
-			new Notice(t("noticeTemplateNotFound", { path: this.settings.hexoTemplatePath }));
+			new Notice(t("noticeTemplateNotFound", { path: this.settings.templatePath }));
 			return;
 		}
 		const templateContent = await this.app.vault.read(template);
@@ -280,9 +281,13 @@ export default class ObsidianHexoBridgePlugin extends Plugin {
 	}
 }
 
-function normalizeSettings(rawSettings: Partial<HexoBridgeSettings> | null | undefined): HexoBridgeSettings {
-	const settings = Object.assign({}, DEFAULT_SETTINGS, rawSettings ?? {});
+function normalizeSettings(rawSettings: Partial<BlogBridgeSettings> | null | undefined): BlogBridgeSettings {
+	const raw = rawSettings ?? {};
+	const settings = Object.assign({}, DEFAULT_SETTINGS, raw);
+	const framework = normalizeFrameworkId(settings.blogFramework);
+	const preset = frameworkPreset(framework);
 	return {
+		blogFramework: framework,
 		githubOwner: stringSetting(settings.githubOwner),
 		githubRepo: stringSetting(settings.githubRepo),
 		githubBranch: stringSetting(settings.githubBranch) || DEFAULT_SETTINGS.githubBranch,
@@ -291,11 +296,11 @@ function normalizeSettings(rawSettings: Partial<HexoBridgeSettings> | null | und
 		githubTokenSecretName: stringSetting(settings.githubTokenSecretName),
 		syncSourceDir: normalizeRelativeSetting(settings.syncSourceDir, DEFAULT_SETTINGS.syncSourceDir),
 		applyTemplateOnNewNote: settings.applyTemplateOnNewNote === true,
-		hexoTemplatePath: normalizeRelativeSetting(settings.hexoTemplatePath, DEFAULT_SETTINGS.hexoTemplatePath),
-		postsDir: normalizeRelativeSetting(settings.postsDir, DEFAULT_SETTINGS.postsDir),
-		localImageDir: normalizeRelativeSetting(settings.localImageDir, DEFAULT_SETTINGS.localImageDir),
+		templatePath: normalizeRelativeSetting(raw.templatePath, DEFAULT_SETTINGS.templatePath),
+		postsDir: normalizeRelativeSetting(raw.postsDir, preset.postsDir),
+		localImageDir: normalizeRelativeSetting(raw.localImageDir, preset.localImageDir),
 		imageNameTemplate: stringSetting(settings.imageNameTemplate) || DEFAULT_SETTINGS.imageNameTemplate,
-		gitCommitMessageTemplate: stringSetting(settings.gitCommitMessageTemplate) || DEFAULT_SETTINGS.gitCommitMessageTemplate,
+		gitCommitMessageTemplate: stringSetting(raw.gitCommitMessageTemplate) || preset.commitMessageTemplate,
 	};
 }
 

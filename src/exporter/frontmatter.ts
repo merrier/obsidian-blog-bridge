@@ -1,4 +1,5 @@
 import { parseYaml, stringifyYaml } from "obsidian";
+import type { BlogFrameworkId } from "../frameworks";
 
 export type Frontmatter = Record<string, unknown>;
 
@@ -50,28 +51,45 @@ export function frontmatterString(value: unknown): string | undefined {
 	return undefined;
 }
 
-export function ensureHexoDefaults(frontmatter: Frontmatter, title: string, now: Date): Frontmatter {
+export function ensureBlogDefaults(frontmatter: Frontmatter, title: string, now: Date, framework: BlogFrameworkId): Frontmatter {
 	const next = { ...frontmatter };
 	if (!frontmatterString(next.title)) {
 		next.title = title;
 	}
 	if (!frontmatterString(next.date)) {
-		next.date = formatHexoDate(now);
+		next.date = framework === "hexo" ? formatDateTime(now) : formatDate(now);
+	}
+	if (framework === "jekyll" && !frontmatterString(next.layout)) {
+		next.layout = "post";
 	}
 	return next;
 }
 
-export function formatHexoDate(date: Date): string {
+export function frontmatterDate(value: unknown): Date | undefined {
+	const raw = frontmatterString(value);
+	if (!raw) {
+		return undefined;
+	}
+	const date = new Date(raw);
+	return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+export function formatDateTime(date: Date): string {
+	const pad = (value: number) => String(value).padStart(2, "0");
+	return `${formatDate(date)} ${[
+		pad(date.getHours()),
+		pad(date.getMinutes()),
+		pad(date.getSeconds()),
+	].join(":")}`;
+}
+
+export function formatDate(date: Date): string {
 	const pad = (value: number) => String(value).padStart(2, "0");
 	return [
 		date.getFullYear(),
 		pad(date.getMonth() + 1),
 		pad(date.getDate()),
-	].join("-") + " " + [
-		pad(date.getHours()),
-		pad(date.getMinutes()),
-		pad(date.getSeconds()),
-	].join(":");
+	].join("-");
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

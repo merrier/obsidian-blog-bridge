@@ -1,5 +1,5 @@
 import { App, TFile } from "obsidian";
-import { HexoBridgeSettings } from "../settings";
+import { BlogBridgeSettings } from "../settings";
 
 export type CommitFileEncoding = "utf-8" | "base64";
 
@@ -12,7 +12,7 @@ export interface CommitFile {
 export interface ExportRequest {
 	app: App;
 	file: TFile;
-	settings: HexoBridgeSettings;
+	settings: BlogBridgeSettings;
 	vaultRoot: string;
 	token: string;
 }
@@ -30,7 +30,7 @@ export interface ExportResult {
 
 export interface ImageContext {
 	app: App;
-	settings: HexoBridgeSettings;
+	settings: BlogBridgeSettings;
 	vaultRoot: string;
 	sourceFile: TFile;
 	sourceAbsPath: string;

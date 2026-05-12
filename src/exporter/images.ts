@@ -1,6 +1,7 @@
 import { Buffer } from "node:buffer";
 import { basename, extname, join } from "node:path";
 import { readFileSync } from "node:fs";
+import { getPublicImagePath } from "../frameworks";
 import {
 	decodeImageRef,
 	fileHash,
@@ -80,22 +81,25 @@ function localImageCommitFile(
 		date: new Date(),
 	});
 
-	const imageRelToHexoRoot = toPosixPath(join(context.settings.localImageDir, relativeImageName));
+	const imageRelToRepoRoot = toPosixPath(join(context.settings.localImageDir, relativeImageName));
 	const content = Buffer.from(readFileSync(sourceImagePath)).toString("base64");
-	const existing = files.find((file) => file.path === imageRelToHexoRoot);
+	const existing = files.find((file) => file.path === imageRelToRepoRoot);
 	if (existing && existing.content !== content) {
-		throw new Error(`Two images resolve to the same Hexo path: ${imageRelToHexoRoot}`);
+		throw new Error(`Two images resolve to the same blog repository path: ${imageRelToRepoRoot}`);
 	}
 	if (!existing) {
 		files.push({
-			path: imageRelToHexoRoot,
+			path: imageRelToRepoRoot,
 			content,
 			encoding: "base64",
 		});
 	}
 
-	const publicPath = `/${toPosixPath(join(context.settings.localImageDir.replace(/^source\//, ""), relativeImageName))}`;
-	return encodeURI(publicPath).replace(/%2F/g, "/");
+	return getPublicImagePath({
+		framework: context.settings.blogFramework,
+		localImageDir: context.settings.localImageDir,
+		relativeImageName,
+	});
 }
 
 async function replaceAsync(

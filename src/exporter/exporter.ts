@@ -1,14 +1,16 @@
 import { join } from "node:path";
 import {
-	ensureHexoDefaults,
+	ensureBlogDefaults,
+	frontmatterDate,
 	frontmatterString,
 	joinFrontmatter,
 	splitFrontmatter,
 } from "./frontmatter";
+import { getPostTargetPath } from "../frameworks";
 import { commitFilesToGitHub } from "./github";
 import { renderCommitMessage } from "./git";
 import { processImages } from "./images";
-import { slugify, toPosixPath } from "./path-utils";
+import { slugify } from "./path-utils";
 import { ExportRequest, ExportResult } from "./types";
 
 export async function exportCurrentNote(request: ExportRequest): Promise<ExportResult> {
@@ -17,8 +19,18 @@ export async function exportCurrentNote(request: ExportRequest): Promise<ExportR
 	const parts = splitFrontmatter(sourceMarkdown);
 	const fallbackTitle = request.file.basename;
 	const title = frontmatterString(parts.frontmatter.title) ?? fallbackTitle;
-	const slug = slugify(frontmatterString(parts.frontmatter.urlname) ?? title);
-	const targetRelPath = toPosixPath(join(request.settings.postsDir, `${slug}.md`));
+	const slug = slugify(
+		frontmatterString(parts.frontmatter.slug)
+		?? frontmatterString(parts.frontmatter.urlname)
+		?? title
+	);
+	const postDate = frontmatterDate(parts.frontmatter.date) ?? now;
+	const targetRelPath = getPostTargetPath({
+		framework: request.settings.blogFramework,
+		postsDir: request.settings.postsDir,
+		slug,
+		date: postDate,
+	});
 
 	const sourceAbsPath = join(request.vaultRoot, request.file.path);
 	const processed = await processImages(parts.body, {
@@ -30,8 +42,8 @@ export async function exportCurrentNote(request: ExportRequest): Promise<ExportR
 		slug,
 	});
 
-	const hexoFrontmatter = ensureHexoDefaults(parts.frontmatter, title, now);
-	const hexoMarkdown = joinFrontmatter(hexoFrontmatter, processed.markdown);
+	const blogFrontmatter = ensureBlogDefaults(parts.frontmatter, title, now, request.settings.blogFramework);
+	const blogMarkdown = joinFrontmatter(blogFrontmatter, processed.markdown);
 	const commit = await commitFilesToGitHub(
 		{
 			owner: request.settings.githubOwner,
@@ -44,7 +56,7 @@ export async function exportCurrentNote(request: ExportRequest): Promise<ExportR
 		[
 			{
 				path: targetRelPath,
-				content: hexoMarkdown,
+				content: blogMarkdown,
 				encoding: "utf-8",
 			},
 			...processed.files,

@@ -1,10 +1,10 @@
 import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
-import type ObsidianHexoBridgePlugin from "./main";
+import type ObsidianBlogBridgePlugin from "./main";
 import type { SyncRecord } from "./main";
 import { frontmatterString } from "./exporter/frontmatter";
 import { getCurrentLanguage, t } from "./i18n";
 
-export const VIEW_TYPE_HEXO_BRIDGE_STATUS = "hexo-bridge-sync-status";
+export const VIEW_TYPE_BLOG_BRIDGE_STATUS = "blog-bridge-sync-status";
 const PAGE_SIZE = 20;
 
 type RowStatus = "synced" | "modified" | "failed" | "unsynced";
@@ -12,32 +12,33 @@ type StatusFilter = "all" | RowStatus;
 
 interface ViewFilters {
 	search: string;
-	tag: string;
+	tags: string[];
 	status: StatusFilter;
 	page: number;
 }
 
-export class HexoBridgeStatusView extends ItemView {
+export class BlogBridgeStatusView extends ItemView {
 	private draftSearch = "";
 	private draftTag = "";
+	private focusTagInputAfterRender = false;
 
 	private filters: ViewFilters = {
 		search: "",
-		tag: "",
+		tags: [],
 		status: "all",
 		page: 1,
 	};
 
-	constructor(leaf: WorkspaceLeaf, private readonly plugin: ObsidianHexoBridgePlugin) {
+	constructor(leaf: WorkspaceLeaf, private readonly plugin: ObsidianBlogBridgePlugin) {
 		super(leaf);
 	}
 
 	getViewType(): string {
-		return VIEW_TYPE_HEXO_BRIDGE_STATUS;
+		return VIEW_TYPE_BLOG_BRIDGE_STATUS;
 	}
 
 	getDisplayText(): string {
-		return "Hexo Bridge";
+		return "Blog Bridge";
 	}
 
 	getIcon(): string {
@@ -51,15 +52,15 @@ export class HexoBridgeStatusView extends ItemView {
 	render(): void {
 		const { containerEl } = this;
 		containerEl.empty();
-		containerEl.addClass("hexo-bridge-view");
+		containerEl.addClass("blog-bridge-view");
 
-		containerEl.createEl("h2", { text: "Hexo Bridge" });
+		containerEl.createEl("h2", { text: "Blog Bridge" });
 		this.renderFilters(containerEl);
 		this.renderList(containerEl);
 	}
 
 	private renderFilters(containerEl: HTMLElement): void {
-		const controls = containerEl.createDiv({ cls: "hexo-bridge-controls" });
+		const controls = containerEl.createDiv({ cls: "blog-bridge-controls" });
 
 		const search = controls.createEl("input", {
 			type: "search",
@@ -76,18 +77,37 @@ export class HexoBridgeStatusView extends ItemView {
 			}
 		});
 
-		const tag = controls.createEl("input", {
+		const tagFilter = controls.createDiv({ cls: "blog-bridge-tag-filter" });
+		for (const activeTag of this.filters.tags) {
+			const chip = tagFilter.createEl("button", {
+				cls: "blog-bridge-tag-chip",
+				text: `${activeTag} ×`,
+			});
+			chip.setAttr("aria-label", t("statusRemoveTag", { tag: activeTag }));
+			chip.addEventListener("click", () => this.removeTagFilter(activeTag));
+		}
+
+		const tag = tagFilter.createEl("input", {
+			cls: "blog-bridge-tag-input",
 			type: "search",
-			placeholder: t("statusFilterTag"),
+			placeholder: this.filters.tags.length === 0 ? t("statusFilterTag") : "",
 			value: this.draftTag,
 		});
+		if (this.focusTagInputAfterRender) {
+			this.focusTagInputAfterRender = false;
+			window.setTimeout(() => tag.focus(), 0);
+		}
 		tag.addEventListener("input", () => {
 			this.draftTag = tag.value;
 		});
 		tag.addEventListener("keydown", (event) => {
 			if (event.key === "Enter") {
 				event.preventDefault();
-				this.applyDraftFilters();
+				this.addDraftTags();
+			}
+			if (event.key === "Backspace" && this.draftTag === "" && this.filters.tags.length > 0) {
+				event.preventDefault();
+				this.removeTagFilter(this.filters.tags[this.filters.tags.length - 1]);
 			}
 		});
 
@@ -114,8 +134,36 @@ export class HexoBridgeStatusView extends ItemView {
 
 	private applyDraftFilters(): void {
 		this.filters.search = this.draftSearch;
-		this.filters.tag = this.draftTag;
+		this.addDraftTags(false);
 		this.filters.page = 1;
+		this.render();
+	}
+
+	private addDraftTags(render = true): void {
+		const nextTags = parseTagFilters(this.draftTag);
+		if (nextTags.length === 0) {
+			return;
+		}
+
+		const existing = new Set(this.filters.tags);
+		for (const tag of nextTags) {
+			if (!existing.has(tag)) {
+				this.filters.tags.push(tag);
+				existing.add(tag);
+			}
+		}
+		this.draftTag = "";
+		this.filters.page = 1;
+		if (render) {
+			this.focusTagInputAfterRender = true;
+			this.render();
+		}
+	}
+
+	private removeTagFilter(tag: string): void {
+		this.filters.tags = this.filters.tags.filter((activeTag) => activeTag !== tag);
+		this.filters.page = 1;
+		this.focusTagInputAfterRender = true;
 		this.render();
 	}
 
@@ -125,23 +173,23 @@ export class HexoBridgeStatusView extends ItemView {
 		this.filters.page = Math.min(Math.max(1, this.filters.page), totalPages);
 
 		const pageRows = rows.slice((this.filters.page - 1) * PAGE_SIZE, this.filters.page * PAGE_SIZE);
-		const summary = containerEl.createDiv({ cls: "hexo-bridge-summary" });
+		const summary = containerEl.createDiv({ cls: "blog-bridge-summary" });
 		summary.setText(t("statusSummary", {
 			count: rows.length,
 			page: this.filters.page,
 			totalPages,
 		}));
 
-		const list = containerEl.createDiv({ cls: "hexo-bridge-list" });
+		const list = containerEl.createDiv({ cls: "blog-bridge-list" });
 		if (pageRows.length === 0) {
-			list.createDiv({ cls: "hexo-bridge-empty", text: t("statusEmpty") });
+			list.createDiv({ cls: "blog-bridge-empty", text: t("statusEmpty") });
 		}
 
 		for (const row of pageRows) {
 			this.renderRow(list, row);
 		}
 
-		const pager = containerEl.createDiv({ cls: "hexo-bridge-pager" });
+		const pager = containerEl.createDiv({ cls: "blog-bridge-pager" });
 		const prev = pager.createEl("button", { text: t("statusPrevious") });
 		prev.disabled = this.filters.page <= 1;
 		prev.addEventListener("click", () => {
@@ -159,13 +207,13 @@ export class HexoBridgeStatusView extends ItemView {
 
 	private renderRow(containerEl: HTMLElement, row: NoteRow): void {
 		const record = row.record;
-		const item = containerEl.createDiv({ cls: "hexo-bridge-row" });
-		const main = item.createDiv({ cls: "hexo-bridge-row-main" });
-		main.createDiv({ cls: "hexo-bridge-title", text: row.title });
-		main.createDiv({ cls: "hexo-bridge-path", text: row.file.path });
+		const item = containerEl.createDiv({ cls: "blog-bridge-row" });
+		const main = item.createDiv({ cls: "blog-bridge-row-main" });
+		main.createDiv({ cls: "blog-bridge-title", text: row.title });
+		main.createDiv({ cls: "blog-bridge-path", text: row.file.path });
 
-		const meta = item.createDiv({ cls: "hexo-bridge-meta" });
-		meta.createSpan({ cls: `hexo-bridge-status hexo-bridge-status-${row.status}`, text: getStatusLabel(row.status) });
+		const meta = item.createDiv({ cls: "blog-bridge-meta" });
+		meta.createSpan({ cls: `blog-bridge-status blog-bridge-status-${row.status}`, text: getStatusLabel(row.status) });
 		if (record?.lastSyncedAt) {
 			meta.createSpan({ text: t("statusLastSynced", { time: formatDateTime(record.lastSyncedAt) }) });
 		} else if (record?.lastAttemptedAt) {
@@ -194,10 +242,10 @@ export class HexoBridgeStatusView extends ItemView {
 			pullRequest.setAttr("rel", "noopener");
 		}
 		if (record?.errorMessage) {
-			meta.createDiv({ cls: "hexo-bridge-error", text: record.errorMessage });
+			meta.createDiv({ cls: "blog-bridge-error", text: record.errorMessage });
 		}
 
-		const actions = item.createDiv({ cls: "hexo-bridge-actions" });
+		const actions = item.createDiv({ cls: "blog-bridge-actions" });
 		const syncing = this.plugin.syncingPaths.has(row.file.path);
 		const post = actions.createEl("button", { text: syncing ? t("statusSyncing") : t("statusSync") });
 		post.disabled = syncing;
@@ -209,7 +257,7 @@ export class HexoBridgeStatusView extends ItemView {
 
 	private filteredRows(): NoteRow[] {
 		const search = this.filters.search.trim().toLowerCase();
-		const tagFilter = normalizeTag(this.filters.tag);
+		const tagFilters = this.filters.tags;
 		return this.plugin.getSyncFiles()
 			.map((file) => this.noteRow(file))
 			.filter((row) => {
@@ -219,7 +267,7 @@ export class HexoBridgeStatusView extends ItemView {
 				if (search && !row.title.toLowerCase().includes(search)) {
 					return false;
 				}
-				if (tagFilter && !row.tags.some((tag) => normalizeTag(tag).includes(tagFilter))) {
+				if (tagFilters.length > 0 && !matchesAnyTag(row.tags, tagFilters)) {
 					return false;
 				}
 				return true;
@@ -274,6 +322,18 @@ function collectTags(frontmatterTags: unknown, inlineTags: string[]): string[] {
 
 function normalizeTag(tag: string): string {
 	return tag.trim().replace(/^#/, "").toLowerCase();
+}
+
+function parseTagFilters(value: string): string[] {
+	return value
+		.split(/[\s,，]+/)
+		.map(normalizeTag)
+		.filter(Boolean);
+}
+
+function matchesAnyTag(rowTags: string[], tagFilters: string[]): boolean {
+	const normalizedTags = new Set(rowTags.map(normalizeTag));
+	return tagFilters.some((tag) => normalizedTags.has(tag));
 }
 
 function getStatusLabel(status: StatusFilter): string {

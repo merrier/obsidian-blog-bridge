@@ -1,10 +1,12 @@
 import { App, PluginSettingTab, SecretComponent, Setting, TFile, TFolder } from "obsidian";
+import { BLOG_FRAMEWORKS, BlogFrameworkId, frameworkPreset, normalizeFrameworkId } from "./frameworks";
 import { t } from "./i18n";
-import type ObsidianHexoBridgePlugin from "./main";
+import type ObsidianBlogBridgePlugin from "./main";
 
 export type GitHubPublishMode = "direct" | "pullRequest";
 
-export interface HexoBridgeSettings {
+export interface BlogBridgeSettings {
+	blogFramework: BlogFrameworkId;
 	githubOwner: string;
 	githubRepo: string;
 	githubBranch: string;
@@ -13,33 +15,34 @@ export interface HexoBridgeSettings {
 	githubTokenSecretName: string;
 	syncSourceDir: string;
 	applyTemplateOnNewNote: boolean;
-	hexoTemplatePath: string;
+	templatePath: string;
 	postsDir: string;
 	localImageDir: string;
 	imageNameTemplate: string;
 	gitCommitMessageTemplate: string;
 }
 
-export const DEFAULT_SETTINGS: HexoBridgeSettings = {
+export const DEFAULT_SETTINGS: BlogBridgeSettings = {
+	blogFramework: "hexo",
 	githubOwner: "",
 	githubRepo: "",
 	githubBranch: "main",
 	githubPublishMode: "direct",
-	githubPullRequestBranch: "hexo-bridge/sync",
+	githubPullRequestBranch: "blog-bridge/sync",
 	githubTokenSecretName: "",
 	syncSourceDir: "",
 	applyTemplateOnNewNote: false,
-	hexoTemplatePath: "",
-	postsDir: "source/_posts",
-	localImageDir: "source/images/obsidian",
+	templatePath: "",
+	postsDir: frameworkPreset("hexo").postsDir,
+	localImageDir: frameworkPreset("hexo").localImageDir,
 	imageNameTemplate: "{{slug}}/{{filename}}",
-	gitCommitMessageTemplate: "chore(hexo): export {{title}}",
+	gitCommitMessageTemplate: frameworkPreset("hexo").commitMessageTemplate,
 };
 
-export class HexoBridgeSettingTab extends PluginSettingTab {
-	plugin: ObsidianHexoBridgePlugin;
+export class BlogBridgeSettingTab extends PluginSettingTab {
+	plugin: ObsidianBlogBridgePlugin;
 
-	constructor(app: App, plugin: ObsidianHexoBridgePlugin) {
+	constructor(app: App, plugin: ObsidianBlogBridgePlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -47,6 +50,25 @@ export class HexoBridgeSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
+		const currentPreset = frameworkPreset(this.plugin.settings.blogFramework);
+
+		new Setting(containerEl)
+			.setName(t("settingsBlogFrameworkName"))
+			.setDesc(t("settingsBlogFrameworkDesc"))
+			.addDropdown((dropdown) => {
+				for (const framework of BLOG_FRAMEWORKS) {
+					dropdown.addOption(framework.id, framework.name);
+				}
+				return dropdown
+					.setValue(this.plugin.settings.blogFramework)
+					.onChange(async (value) => {
+						const previousFramework = this.plugin.settings.blogFramework;
+						this.plugin.settings.blogFramework = normalizeFrameworkId(value);
+						applyFrameworkDefaults(this.plugin.settings, previousFramework);
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			});
 
 		new Setting(containerEl)
 			.setName(t("settingsGitHubOwnerName"))
@@ -136,21 +158,21 @@ export class HexoBridgeSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName(t("settingsHexoTemplateName"))
-			.setDesc(t("settingsHexoTemplateDesc"))
+			.setName(t("settingsTemplateName"))
+			.setDesc(t("settingsTemplateDesc"))
 			.addDropdown((dropdown) => {
 				const files = getMarkdownFileOptions(this.app);
 				dropdown.addOption("", t("settingsNoTemplate"));
 				for (const file of files) {
 					dropdown.addOption(file, file);
 				}
-				if (this.plugin.settings.hexoTemplatePath && !files.includes(this.plugin.settings.hexoTemplatePath)) {
-					dropdown.addOption(this.plugin.settings.hexoTemplatePath, t("settingsMissingPath", { path: this.plugin.settings.hexoTemplatePath }));
+				if (this.plugin.settings.templatePath && !files.includes(this.plugin.settings.templatePath)) {
+					dropdown.addOption(this.plugin.settings.templatePath, t("settingsMissingPath", { path: this.plugin.settings.templatePath }));
 				}
 				return dropdown
-					.setValue(this.plugin.settings.hexoTemplatePath)
+					.setValue(this.plugin.settings.templatePath)
 					.onChange(async (value) => {
-						this.plugin.settings.hexoTemplatePath = normalizeRelativeSetting(value, DEFAULT_SETTINGS.hexoTemplatePath);
+						this.plugin.settings.templatePath = normalizeRelativeSetting(value, DEFAULT_SETTINGS.templatePath);
 						await this.plugin.saveSettings();
 					});
 			});
@@ -169,10 +191,10 @@ export class HexoBridgeSettingTab extends PluginSettingTab {
 			.setName(t("settingsPostsDirName"))
 			.setDesc(t("settingsPostsDirDesc"))
 			.addText((text) => text
-				.setPlaceholder(DEFAULT_SETTINGS.postsDir)
+				.setPlaceholder(currentPreset.postsDir)
 				.setValue(this.plugin.settings.postsDir)
 				.onChange(async (value) => {
-					this.plugin.settings.postsDir = normalizeRelativeSetting(value, DEFAULT_SETTINGS.postsDir);
+					this.plugin.settings.postsDir = normalizeRelativeSetting(value, currentPreset.postsDir);
 					await this.plugin.saveSettings();
 				}));
 
@@ -180,10 +202,10 @@ export class HexoBridgeSettingTab extends PluginSettingTab {
 			.setName(t("settingsLocalImageDirName"))
 			.setDesc(t("settingsLocalImageDirDesc"))
 			.addText((text) => text
-				.setPlaceholder(DEFAULT_SETTINGS.localImageDir)
+				.setPlaceholder(currentPreset.localImageDir)
 				.setValue(this.plugin.settings.localImageDir)
 				.onChange(async (value) => {
-					this.plugin.settings.localImageDir = normalizeRelativeSetting(value, DEFAULT_SETTINGS.localImageDir);
+					this.plugin.settings.localImageDir = normalizeRelativeSetting(value, currentPreset.localImageDir);
 					await this.plugin.saveSettings();
 				}));
 
@@ -202,12 +224,26 @@ export class HexoBridgeSettingTab extends PluginSettingTab {
 			.setName(t("settingsCommitMessageName"))
 			.setDesc(t("settingsCommitMessageDesc"))
 			.addText((text) => text
-				.setPlaceholder(DEFAULT_SETTINGS.gitCommitMessageTemplate)
+				.setPlaceholder(currentPreset.commitMessageTemplate)
 				.setValue(this.plugin.settings.gitCommitMessageTemplate)
 				.onChange(async (value) => {
-					this.plugin.settings.gitCommitMessageTemplate = value.trim() || DEFAULT_SETTINGS.gitCommitMessageTemplate;
+					this.plugin.settings.gitCommitMessageTemplate = value.trim() || currentPreset.commitMessageTemplate;
 					await this.plugin.saveSettings();
 				}));
+	}
+}
+
+function applyFrameworkDefaults(settings: BlogBridgeSettings, previousFramework: BlogFrameworkId): void {
+	const previousPreset = frameworkPreset(previousFramework);
+	const nextPreset = frameworkPreset(settings.blogFramework);
+	if (!settings.postsDir || settings.postsDir === previousPreset.postsDir) {
+		settings.postsDir = nextPreset.postsDir;
+	}
+	if (!settings.localImageDir || settings.localImageDir === previousPreset.localImageDir) {
+		settings.localImageDir = nextPreset.localImageDir;
+	}
+	if (!settings.gitCommitMessageTemplate || settings.gitCommitMessageTemplate === previousPreset.commitMessageTemplate) {
+		settings.gitCommitMessageTemplate = nextPreset.commitMessageTemplate;
 	}
 }
 

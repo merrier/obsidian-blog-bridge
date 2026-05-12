@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-hexo-bridge",
-	"version": "0.1.0",
-	"description": "Sync Obsidian notes to a GitHub-backed Hexo blog with image handling and status tracking.",
+	"name": "obsidian-blog-bridge",
+	"version": "0.1.1",
+	"description": "Sync Obsidian notes to GitHub-backed Markdown static-site blogs with image handling and status tracking.",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
@@ -11,8 +11,9 @@
 	},
 	"keywords": [
 		"obsidian",
-		"hexo",
-		"blog"
+		"blog",
+		"markdown",
+		"static-site"
 	],
 	"author": "merrier",
 	"license": "MIT",

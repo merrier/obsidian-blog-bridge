@@ -127,8 +127,8 @@ async function commitFilesToPullRequest(
 	const pullRequest = await client.getOrCreatePullRequest(
 		headBranch,
 		baseBranch,
-		"Hexo Bridge sync",
-		"Automated Hexo Bridge sync from Obsidian."
+		"Blog Bridge sync",
+		"Automated Blog Bridge sync from Obsidian."
 	);
 
 	return {
