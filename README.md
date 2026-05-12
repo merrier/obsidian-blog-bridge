@@ -34,7 +34,7 @@ The paths are configurable, so the presets are starting points rather than hard 
 - Preserve existing frontmatter and fill missing `title` and `date`.
 - Use frontmatter `slug` or `urlname` for the output file name, then fall back to a slugified title.
 - Use Jekyll's dated post filename convention automatically.
-- Open a sync status page from the ribbon icon, with title, tag, and status filters.
+- Open a sync status page from the ribbon icon, with title, tag, status filters, page-size options, and batch sync.
 - Mark notes as `Modified` when they changed locally after the last successful sync.
 - Follow the current Obsidian app language for Chinese and English UI text.
 - Store tokens through Obsidian SecretStorage; plugin data only stores the secret name.
@@ -92,7 +92,7 @@ Use a GitHub classic personal access token because Blog Bridge validates the `gh
 ## Usage
 
 - Click the ribbon icon to open the Blog Bridge status page.
-- Filter notes from the status page and click `Sync` on a row.
+- Filter notes from the status page and click `Sync` on a row, or select multiple notes and run `Sync selected`.
 - Or run `Sync current note to blog` from the command palette.
 - After a successful sync, the status page records the target path, commit link, and Pull Request link.
 - If a note changes locally after a successful sync, its status becomes `Modified` and it can be synced again.

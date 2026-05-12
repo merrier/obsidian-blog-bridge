@@ -5,28 +5,34 @@ import { frontmatterString } from "./exporter/frontmatter";
 import { getCurrentLanguage, t } from "./i18n";
 
 export const VIEW_TYPE_BLOG_BRIDGE_STATUS = "blog-bridge-sync-status";
-const PAGE_SIZE = 20;
+const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+const DEFAULT_PAGE_SIZE: PageSize = 10;
 
 type RowStatus = "synced" | "modified" | "failed" | "unsynced";
 type StatusFilter = "all" | RowStatus;
+type PageSize = typeof PAGE_SIZE_OPTIONS[number];
 
 interface ViewFilters {
 	search: string;
 	tags: string[];
 	status: StatusFilter;
 	page: number;
+	pageSize: PageSize;
 }
 
 export class BlogBridgeStatusView extends ItemView {
 	private draftSearch = "";
 	private draftTag = "";
 	private focusTagInputAfterRender = false;
+	private selectedPaths = new Set<string>();
+	private batchSyncing = false;
 
 	private filters: ViewFilters = {
 		search: "",
 		tags: [],
 		status: "all",
 		page: 1,
+		pageSize: DEFAULT_PAGE_SIZE,
 	};
 
 	constructor(leaf: WorkspaceLeaf, private readonly plugin: ObsidianBlogBridgePlugin) {
@@ -169,16 +175,21 @@ export class BlogBridgeStatusView extends ItemView {
 
 	private renderList(containerEl: HTMLElement): void {
 		const rows = this.filteredRows();
-		const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+		this.pruneSelectedPaths(rows);
+
+		const pageSize = this.filters.pageSize;
+		const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
 		this.filters.page = Math.min(Math.max(1, this.filters.page), totalPages);
 
-		const pageRows = rows.slice((this.filters.page - 1) * PAGE_SIZE, this.filters.page * PAGE_SIZE);
+		const pageRows = rows.slice((this.filters.page - 1) * pageSize, this.filters.page * pageSize);
 		const summary = containerEl.createDiv({ cls: "blog-bridge-summary" });
 		summary.setText(t("statusSummary", {
 			count: rows.length,
 			page: this.filters.page,
 			totalPages,
 		}));
+
+		this.renderBulkActions(containerEl, rows, pageRows);
 
 		const list = containerEl.createDiv({ cls: "blog-bridge-list" });
 		if (pageRows.length === 0) {
@@ -197,6 +208,20 @@ export class BlogBridgeStatusView extends ItemView {
 			this.render();
 		});
 
+		const pageSizeSelect = pager.createEl("select");
+		for (const value of PAGE_SIZE_OPTIONS) {
+			pageSizeSelect.createEl("option", {
+				value: String(value),
+				text: t("statusPageSize", { count: value }),
+			});
+		}
+		pageSizeSelect.value = String(this.filters.pageSize);
+		pageSizeSelect.addEventListener("change", () => {
+			this.filters.pageSize = normalizePageSize(Number(pageSizeSelect.value));
+			this.filters.page = 1;
+			this.render();
+		});
+
 		const next = pager.createEl("button", { text: t("statusNext") });
 		next.disabled = this.filters.page >= totalPages;
 		next.addEventListener("click", () => {
@@ -205,9 +230,76 @@ export class BlogBridgeStatusView extends ItemView {
 		});
 	}
 
+	private renderBulkActions(containerEl: HTMLElement, rows: NoteRow[], pageRows: NoteRow[]): void {
+		const selectedRows = this.selectedRows(rows);
+		const selectedOnPage = pageRows.filter((row) => this.selectedPaths.has(row.file.path));
+		const allPageSelected = pageRows.length > 0 && selectedOnPage.length === pageRows.length;
+		const somePageSelected = selectedOnPage.length > 0 && !allPageSelected;
+
+		const bulkActions = containerEl.createDiv({ cls: "blog-bridge-bulk-actions" });
+		const selectPageLabel = bulkActions.createEl("label", { cls: "blog-bridge-select-page" });
+		const selectPage = selectPageLabel.createEl("input", { type: "checkbox" });
+		selectPage.checked = allPageSelected;
+		selectPage.indeterminate = somePageSelected;
+		selectPage.disabled = pageRows.length === 0 || this.batchSyncing;
+		selectPage.addEventListener("change", () => {
+			if (selectPage.checked) {
+				for (const row of pageRows) {
+					this.selectedPaths.add(row.file.path);
+				}
+			} else {
+				for (const row of pageRows) {
+					this.selectedPaths.delete(row.file.path);
+				}
+			}
+			this.render();
+		});
+		selectPageLabel.createSpan({ text: t("statusSelectPage") });
+
+		bulkActions.createSpan({
+			cls: "blog-bridge-selected-count",
+			text: t("statusSelectedCount", { count: selectedRows.length }),
+		});
+
+		const syncSelected = bulkActions.createEl("button", {
+			text: this.batchSyncing ? t("statusBatchSyncing") : t("statusSyncSelected"),
+		});
+		syncSelected.disabled = this.batchSyncing || selectedRows.length === 0;
+		syncSelected.addEventListener("click", async () => {
+			await this.syncSelectedRows(rows);
+		});
+
+		const clearSelection = bulkActions.createEl("button", {
+			cls: "blog-bridge-secondary-button",
+			text: t("statusClearSelection"),
+		});
+		clearSelection.disabled = this.batchSyncing || selectedRows.length === 0;
+		clearSelection.addEventListener("click", () => {
+			this.selectedPaths.clear();
+			this.render();
+		});
+	}
+
 	private renderRow(containerEl: HTMLElement, row: NoteRow): void {
 		const record = row.record;
 		const item = containerEl.createDiv({ cls: "blog-bridge-row" });
+		if (this.selectedPaths.has(row.file.path)) {
+			item.addClass("blog-bridge-row-selected");
+		}
+
+		const select = item.createEl("input", { cls: "blog-bridge-row-select", type: "checkbox" });
+		select.checked = this.selectedPaths.has(row.file.path);
+		select.disabled = this.batchSyncing;
+		select.setAttr("aria-label", t("statusSelectNote", { title: row.title }));
+		select.addEventListener("change", () => {
+			if (select.checked) {
+				this.selectedPaths.add(row.file.path);
+			} else {
+				this.selectedPaths.delete(row.file.path);
+			}
+			this.render();
+		});
+
 		const main = item.createDiv({ cls: "blog-bridge-row-main" });
 		main.createDiv({ cls: "blog-bridge-title", text: row.title });
 		main.createDiv({ cls: "blog-bridge-path", text: row.file.path });
@@ -248,11 +340,39 @@ export class BlogBridgeStatusView extends ItemView {
 		const actions = item.createDiv({ cls: "blog-bridge-actions" });
 		const syncing = this.plugin.syncingPaths.has(row.file.path);
 		const post = actions.createEl("button", { text: syncing ? t("statusSyncing") : t("statusSync") });
-		post.disabled = syncing;
+		post.disabled = syncing || this.batchSyncing;
 		post.addEventListener("click", async () => {
 			await this.plugin.syncFile(row.file);
 			this.render();
 		});
+	}
+
+	private async syncSelectedRows(rows: NoteRow[]): Promise<void> {
+		if (this.batchSyncing) {
+			return;
+		}
+
+		const selectedRows = this.selectedRows(rows);
+		if (selectedRows.length === 0) {
+			return;
+		}
+
+		this.batchSyncing = true;
+		this.render();
+		try {
+			for (const row of selectedRows) {
+				if (!this.selectedPaths.has(row.file.path)) {
+					continue;
+				}
+				const result = await this.plugin.syncFile(row.file);
+				if (result) {
+					this.selectedPaths.delete(row.file.path);
+				}
+			}
+		} finally {
+			this.batchSyncing = false;
+			this.render();
+		}
 	}
 
 	private filteredRows(): NoteRow[] {
@@ -285,6 +405,19 @@ export class BlogBridgeStatusView extends ItemView {
 			record,
 			status: getRowStatus(file, record),
 		};
+	}
+
+	private selectedRows(rows: NoteRow[]): NoteRow[] {
+		return rows.filter((row) => this.selectedPaths.has(row.file.path));
+	}
+
+	private pruneSelectedPaths(rows: NoteRow[]): void {
+		const visiblePaths = new Set(rows.map((row) => row.file.path));
+		for (const path of Array.from(this.selectedPaths)) {
+			if (!visiblePaths.has(path)) {
+				this.selectedPaths.delete(path);
+			}
+		}
 	}
 }
 
@@ -334,6 +467,10 @@ function parseTagFilters(value: string): string[] {
 function matchesAnyTag(rowTags: string[], tagFilters: string[]): boolean {
 	const normalizedTags = new Set(rowTags.map(normalizeTag));
 	return tagFilters.some((tag) => normalizedTags.has(tag));
+}
+
+function normalizePageSize(value: number): PageSize {
+	return PAGE_SIZE_OPTIONS.includes(value as PageSize) ? value as PageSize : DEFAULT_PAGE_SIZE;
 }
 
 function getStatusLabel(status: StatusFilter): string {
