@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/readme-header.svg" alt="Blog Bridge" width="100%">
+</p>
+
 # Blog Bridge
 
 Blog Bridge 是一个 Obsidian 插件，用来把指定笔记手动同步到基于 GitHub 仓库的 Markdown 静态博客。

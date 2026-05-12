@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/readme-header.svg" alt="Blog Bridge" width="100%">
+</p>
+
 # Blog Bridge
 
 Blog Bridge is an Obsidian plugin for syncing selected notes to GitHub-backed Markdown static-site blogs.
