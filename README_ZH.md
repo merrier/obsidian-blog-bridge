@@ -41,16 +41,13 @@ Blog Bridge 聚焦“文件型 Markdown 静态站”：
 
 ## 安装
 
-如果你从 Release 安装，复制以下文件到 Obsidian vault 的插件目录：
+推荐直接从 Obsidian 第三方插件市场安装：
 
-```text
-.obsidian/plugins/obsidian-blog-bridge/
-  manifest.json
-  main.js
-  styles.css
-```
+1. 打开 Obsidian `设置`。
+2. 进入 `第三方插件`，按需关闭 `安全模式`。
+3. 点击 `浏览`，搜索 `Blog Bridge`，然后安装并启用。
 
-如果你从源码安装：
+如果你要从源码本地开发：
 
 ```bash
 cd .obsidian/plugins
@@ -59,8 +56,6 @@ cd obsidian-blog-bridge
 npm install
 npm run build
 ```
-
-然后在 Obsidian 中重新加载插件，并启用 `Blog Bridge`。
 
 ## 配置
 

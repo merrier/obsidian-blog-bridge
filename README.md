@@ -41,16 +41,13 @@ The paths are configurable, so the presets are starting points rather than hard 
 
 ## Installation
 
-For a release install, copy these files into your vault plugin directory:
+Install Blog Bridge from Obsidian's Community Plugins marketplace:
 
-```text
-.obsidian/plugins/obsidian-blog-bridge/
-  manifest.json
-  main.js
-  styles.css
-```
+1. Open Obsidian `Settings`.
+2. Go to `Community plugins` and turn off `Restricted mode` if needed.
+3. Choose `Browse`, search for `Blog Bridge`, then install and enable it.
 
-For a source install:
+For local development from source:
 
 ```bash
 cd .obsidian/plugins
@@ -59,8 +56,6 @@ cd obsidian-blog-bridge
 npm install
 npm run build
 ```
-
-Reload Obsidian plugins, then enable `Blog Bridge`.
 
 ## Settings
 
