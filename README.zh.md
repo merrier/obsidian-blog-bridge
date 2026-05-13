@@ -88,6 +88,12 @@ npm run build
 - Pull Request / MR 模式还需要创建和更新 Pull Request 的权限。
 - Token 明文由 Obsidian SecretStorage 保存，插件的 `data.json` 只保存 secret 名称。
 
+## 隐私与网络访问
+
+Blog Bridge 会向 GitHub REST API 发送请求，用于读取仓库引用、创建 blob、commit、分支和 Pull Request。请求只针对你在设置中配置的 GitHub 仓库。插件不包含客户端遥测、数据分析或广告。
+
+Blog Bridge 仅支持桌面端，因为它会从你的 Obsidian 库中读取本地 Markdown 笔记和本地图片附件，然后把你选择同步的笔记及其引用的本地图片上传到配置好的 GitHub 仓库。
+
 ## 使用方式
 
 - 点击左侧 Ribbon 图标打开 Blog Bridge 状态页。

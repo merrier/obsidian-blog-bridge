@@ -6,7 +6,7 @@
 
 Blog Bridge is an Obsidian plugin for syncing selected notes to GitHub-backed Markdown static-site blogs.
 
-[Chinese documentation](README_ZH.md)
+[Chinese documentation](README.zh.md)
 
 ## Screenshots
 
@@ -87,6 +87,12 @@ Use a GitHub classic personal access token because Blog Bridge validates the `gh
 - Direct commit mode needs content read/write access to the target repository.
 - Pull Request / MR mode also needs permission to create and update pull requests.
 - The token value is stored by Obsidian SecretStorage. Blog Bridge only stores the selected secret name in `data.json`.
+
+## Privacy and Network Access
+
+Blog Bridge sends requests to the GitHub REST API to read repository refs, create blobs, commits, branches, and pull requests for the repository you configure. It does not include client-side telemetry, analytics, or advertising.
+
+Blog Bridge is desktop-only because it reads local Markdown notes and local image attachments from your Obsidian vault before uploading the selected note and referenced local images to your configured GitHub repository.
 
 ## Usage
 
