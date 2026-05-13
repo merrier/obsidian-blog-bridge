@@ -1,9 +1,9 @@
 {
 	"id": "blog-bridge",
 	"name": "Blog Bridge",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"minAppVersion": "1.8.7",
-	"description": "Sync Obsidian notes to GitHub-backed Markdown static-site blogs with image handling and status tracking.",
+	"description": "Sync notes to GitHub-backed Markdown static-site blogs with image handling and status tracking.",
 	"author": "merrier",
 	"authorUrl": "https://github.com/merrier",
 	"isDesktopOnly": true
