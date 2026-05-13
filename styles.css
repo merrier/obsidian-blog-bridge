@@ -154,8 +154,7 @@
 .blog-bridge-row {
 	display: grid;
 	grid-template-columns: auto minmax(0, 1fr) auto;
-	column-gap: 24px;
-	row-gap: 14px;
+	gap: 14px 24px;
 	align-items: center;
 	padding: 24px 0;
 	border-bottom: 1px solid var(--background-modifier-border);
