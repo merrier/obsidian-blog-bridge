@@ -4,7 +4,13 @@ import { renderTemplateVariables } from "./exporter/path-utils";
 import { ExportResult } from "./exporter/types";
 import { frameworkPreset, normalizeFrameworkId } from "./frameworks";
 import { t } from "./i18n";
-import { BlogBridgeSettings, BlogBridgeSettingTab, DEFAULT_SETTINGS } from "./settings";
+import {
+	ALL_MARKDOWN_SYNC_SOURCE,
+	BlogBridgeSettings,
+	BlogBridgeSettingTab,
+	DEFAULT_SETTINGS,
+	normalizeSyncSourceDirSetting,
+} from "./settings";
 import { BlogBridgeStatusView, VIEW_TYPE_BLOG_BRIDGE_STATUS } from "./status-view";
 
 const GITHUB_TOKEN_PREFIX = "ghp_";
@@ -114,6 +120,10 @@ export default class ObsidianBlogBridgePlugin extends Plugin {
 		const appWithSettings = this.app as unknown as { setting: { open(): void; openTabById(id: string): void } };
 		appWithSettings.setting.open();
 		appWithSettings.setting.openTabById(this.manifest.id);
+	}
+
+	hasSyncSourceDir(): boolean {
+		return Boolean(this.settings.syncSourceDir);
 	}
 
 	getSyncFiles(): TFile[] {
@@ -241,8 +251,14 @@ export default class ObsidianBlogBridgePlugin extends Plugin {
 	}
 
 	private isInSyncSourceDir(path: string): boolean {
+		if (!this.settings.syncSourceDir) {
+			return false;
+		}
+		if (this.settings.syncSourceDir === ALL_MARKDOWN_SYNC_SOURCE) {
+			return true;
+		}
 		const sourceDir = normalizeVaultPrefix(this.settings.syncSourceDir);
-		return !sourceDir || path === sourceDir || path.startsWith(`${sourceDir}/`);
+		return path === sourceDir || path.startsWith(`${sourceDir}/`);
 	}
 
 	private validateGitHubSettings() {
@@ -296,7 +312,7 @@ function normalizeSettings(rawSettings: Partial<BlogBridgeSettings> | null | und
 		githubPublishMode: normalizePublishMode(settings.githubPublishMode),
 		githubPullRequestBranch: normalizeBranchSetting(settings.githubPullRequestBranch, DEFAULT_SETTINGS.githubPullRequestBranch),
 		githubTokenSecretName: stringSetting(settings.githubTokenSecretName),
-		syncSourceDir: normalizeRelativeSetting(settings.syncSourceDir, DEFAULT_SETTINGS.syncSourceDir),
+		syncSourceDir: normalizeSyncSourceDirSetting(settings.syncSourceDir, DEFAULT_SETTINGS.syncSourceDir),
 		applyTemplateOnNewNote: settings.applyTemplateOnNewNote === true,
 		templatePath: normalizeRelativeSetting(raw.templatePath, DEFAULT_SETTINGS.templatePath),
 		postsDir: normalizeRelativeSetting(raw.postsDir, preset.postsDir),

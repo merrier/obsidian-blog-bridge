@@ -1,7 +1,7 @@
 {
 	"id": "blog-bridge",
 	"name": "Blog Bridge",
-	"version": "1.0.6",
+	"version": "1.0.7",
 	"minAppVersion": "1.11.4",
 	"description": "Sync notes to GitHub-backed Markdown static-site blogs with image handling and status tracking.",
 	"author": "merrier",

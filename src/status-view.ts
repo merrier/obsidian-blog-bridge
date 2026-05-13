@@ -61,7 +61,7 @@ export class BlogBridgeStatusView extends ItemView {
 		containerEl.addClass("blog-bridge-view");
 
 		containerEl.createEl("h2", { text: "Blog Bridge" });
-		if (!this.plugin.settings.syncSourceDir) {
+		if (!this.plugin.hasSyncSourceDir()) {
 			this.renderMissingSourceDir(containerEl);
 			return;
 		}

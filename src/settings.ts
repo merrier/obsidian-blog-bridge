@@ -5,6 +5,8 @@ import type ObsidianBlogBridgePlugin from "./main";
 
 export type GitHubPublishMode = "direct" | "pullRequest";
 
+export const ALL_MARKDOWN_SYNC_SOURCE = "__all_markdown_files__";
+
 export interface BlogBridgeSettings {
 	blogFramework: BlogFrameworkId;
 	githubOwner: string;
@@ -149,16 +151,17 @@ export class BlogBridgeSettingTab extends PluginSettingTab {
 			.addDropdown((dropdown) => {
 				const folders = getVaultFolderOptions(this.app);
 				dropdown.addOption("", t("settingsNoSyncSourceDir"));
+				dropdown.addOption(ALL_MARKDOWN_SYNC_SOURCE, t("settingsAllMarkdownFiles"));
 				for (const folder of folders) {
 					dropdown.addOption(folder, folder);
 				}
-				if (this.plugin.settings.syncSourceDir && !folders.includes(this.plugin.settings.syncSourceDir)) {
+				if (this.plugin.settings.syncSourceDir && this.plugin.settings.syncSourceDir !== ALL_MARKDOWN_SYNC_SOURCE && !folders.includes(this.plugin.settings.syncSourceDir)) {
 					dropdown.addOption(this.plugin.settings.syncSourceDir, t("settingsMissingPath", { path: this.plugin.settings.syncSourceDir }));
 				}
 				return dropdown
 					.setValue(this.plugin.settings.syncSourceDir)
 					.onChange(async (value) => {
-						this.plugin.settings.syncSourceDir = normalizeRelativeSetting(value, DEFAULT_SETTINGS.syncSourceDir);
+						this.plugin.settings.syncSourceDir = normalizeSyncSourceDirSetting(value, DEFAULT_SETTINGS.syncSourceDir);
 						await this.plugin.saveSettings();
 						this.plugin.refreshStatusViews();
 					});
@@ -357,6 +360,13 @@ function normalizeRelativeSetting(value: string, fallback: string): string {
 		return fallback;
 	}
 	return segments.join("/");
+}
+
+export function normalizeSyncSourceDirSetting(value: string | undefined, fallback: string): string {
+	if (value === ALL_MARKDOWN_SYNC_SOURCE) {
+		return ALL_MARKDOWN_SYNC_SOURCE;
+	}
+	return normalizeRelativeSetting(value ?? "", fallback);
 }
 
 function normalizeBranchSetting(value: string, fallback: string): string {
