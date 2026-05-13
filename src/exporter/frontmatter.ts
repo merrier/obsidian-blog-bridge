@@ -27,7 +27,7 @@ export function splitFrontmatter(markdown: string): MarkdownParts {
 		};
 	}
 
-	const parsed = parseYaml(match[1]);
+	const parsed: unknown = parseYaml(match[1]);
 	return {
 		frontmatter: isRecord(parsed) ? parsed : {},
 		body: markdown.slice(match[0].length),

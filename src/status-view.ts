@@ -265,8 +265,8 @@ export class BlogBridgeStatusView extends ItemView {
 			text: this.batchSyncing ? t("statusBatchSyncing") : t("statusSyncSelected"),
 		});
 		syncSelected.disabled = this.batchSyncing || selectedRows.length === 0;
-		syncSelected.addEventListener("click", async () => {
-			await this.syncSelectedRows(rows);
+		syncSelected.addEventListener("click", () => {
+			void this.syncSelectedRows(rows);
 		});
 
 		const clearSelection = bulkActions.createEl("button", {
@@ -341,10 +341,14 @@ export class BlogBridgeStatusView extends ItemView {
 		const syncing = this.plugin.syncingPaths.has(row.file.path);
 		const post = actions.createEl("button", { text: syncing ? t("statusSyncing") : t("statusSync") });
 		post.disabled = syncing || this.batchSyncing;
-		post.addEventListener("click", async () => {
-			await this.plugin.syncFile(row.file);
-			this.render();
+		post.addEventListener("click", () => {
+			void this.syncRow(row);
 		});
+	}
+
+	private async syncRow(row: NoteRow): Promise<void> {
+		await this.plugin.syncFile(row.file);
+		this.render();
 	}
 
 	private async syncSelectedRows(rows: NoteRow[]): Promise<void> {

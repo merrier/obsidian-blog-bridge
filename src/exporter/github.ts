@@ -1,3 +1,5 @@
+import { requestUrl } from "obsidian";
+import type { RequestUrlResponse } from "obsidian";
 import { CommitFile } from "./types";
 
 const API_BASE = "https://api.github.com";
@@ -255,7 +257,8 @@ class GitHubClient {
 	}
 
 	private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
-		const response = await fetch(`${API_BASE}/repos/${encodeURIComponent(this.target.owner)}/${encodeURIComponent(this.target.repo)}${path}`, {
+		const response = await requestUrl({
+			url: `${API_BASE}/repos/${encodeURIComponent(this.target.owner)}/${encodeURIComponent(this.target.repo)}${path}`,
 			method,
 			headers: {
 				Accept: "application/vnd.github+json",
@@ -266,14 +269,14 @@ class GitHubClient {
 			body: body === undefined ? undefined : JSON.stringify(body),
 		});
 
-		if (!response.ok) {
+		if (response.status < 200 || response.status >= 300) {
 			throw new GitHubApiError(response.status, await githubErrorMessage(response));
 		}
 
 		if (response.status === 204) {
 			return undefined as T;
 		}
-		return await response.json() as T;
+		return parseJsonResponse<T>(response.text);
 	}
 }
 
@@ -300,11 +303,13 @@ function encodeRefPath(ref: string): string {
 	return ref.split("/").map((part) => encodeURIComponent(part)).join("/");
 }
 
-async function githubErrorMessage(response: Response): Promise<string> {
-	let detail = response.statusText;
+async function githubErrorMessage(response: RequestUrlResponse): Promise<string> {
+	let detail = response.text || `HTTP ${response.status}`;
 	try {
-		const data = await response.json() as GitHubErrorResponse;
-		detail = data.message || detail;
+		const data: unknown = JSON.parse(response.text);
+		if (isGitHubErrorResponse(data)) {
+			detail = data.message || detail;
+		}
 	} catch {
 		// Keep the HTTP status text when GitHub does not return JSON.
 	}
@@ -319,4 +324,13 @@ async function githubErrorMessage(response: Response): Promise<string> {
 		return "GitHub branch changed while syncing. Please try again.";
 	}
 	return `GitHub API error ${response.status}: ${detail}`;
+}
+
+function parseJsonResponse<T>(text: string): T {
+	const data: unknown = JSON.parse(text);
+	return data as T;
+}
+
+function isGitHubErrorResponse(value: unknown): value is GitHubErrorResponse {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
 }

@@ -46,7 +46,6 @@ export default class ObsidianBlogBridgePlugin extends Plugin {
 			await this.activateStatusView();
 		});
 		ribbonIcon.addClass("blog-bridge-ribbon-icon");
-		ribbonIcon.style.order = "50";
 
 		this.addCommand({
 			id: "sync-current-note-to-blog-post",
@@ -57,7 +56,7 @@ export default class ObsidianBlogBridgePlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: "open-blog-bridge-settings",
+			id: "open-settings",
 			name: t("commandOpenSettings"),
 			callback: () => {
 				(this.app as unknown as { setting: { open(): void; openTabById(id: string): void } }).setting.open();
@@ -80,9 +79,7 @@ export default class ObsidianBlogBridgePlugin extends Plugin {
 		const raw = await this.loadData() as Partial<BlogBridgePluginData & BlogBridgeSettings> | null;
 		const rawSettings = raw && isRecord(raw.settings) ? raw.settings : raw;
 		this.settings = normalizeSettings(rawSettings);
-		this.syncRecords = raw && isRecord(raw.syncRecords)
-			? raw.syncRecords as Record<string, SyncRecord>
-			: {};
+		this.syncRecords = raw && isSyncRecordMap(raw.syncRecords) ? raw.syncRecords : {};
 	}
 
 	async saveSettings() {
@@ -103,7 +100,7 @@ export default class ObsidianBlogBridgePlugin extends Plugin {
 			type: VIEW_TYPE_BLOG_BRIDGE_STATUS,
 			active: true,
 		});
-		this.app.workspace.revealLeaf(leaf);
+		await this.app.workspace.revealLeaf(leaf);
 	}
 
 	refreshStatusViews() {
@@ -339,6 +336,15 @@ function stringSetting(value: unknown): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isSyncRecordMap(value: unknown): value is Record<string, SyncRecord> {
+	if (!isRecord(value)) {
+		return false;
+	}
+	return Object.values(value).every((record) => isRecord(record) && (
+		record.lastStatus === "synced" || record.lastStatus === "failed"
+	) && typeof record.lastAttemptedAt === "string");
 }
 
 function delay(ms: number): Promise<void> {
