@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, SecretComponent, Setting, TFile, TFolder } from "obsidian";
+import { App, Modal, Notice, PluginSettingTab, Setting, TFile, TFolder } from "obsidian";
 import { BLOG_FRAMEWORKS, BlogFrameworkId, frameworkPreset, normalizeFrameworkId } from "./frameworks";
 import { t } from "./i18n";
 import type ObsidianBlogBridgePlugin from "./main";
@@ -74,7 +74,7 @@ export class BlogBridgeSettingTab extends PluginSettingTab {
 			.setName(t("settingsGitHubOwnerName"))
 			.setDesc(t("settingsGitHubOwnerDesc"))
 			.addText((text) => text
-				.setPlaceholder("merrier")
+				.setPlaceholder("Your GitHub Name")
 				.setValue(this.plugin.settings.githubOwner)
 				.onChange(async (value) => {
 					this.plugin.settings.githubOwner = value.trim();
@@ -85,7 +85,7 @@ export class BlogBridgeSettingTab extends PluginSettingTab {
 			.setName(t("settingsGitHubRepoName"))
 			.setDesc(t("settingsGitHubRepoDesc"))
 			.addText((text) => text
-				.setPlaceholder("merrier.github.io")
+				.setPlaceholder("Your GitHub Repository")
 				.setValue(this.plugin.settings.githubRepo)
 				.onChange(async (value) => {
 					this.plugin.settings.githubRepo = value.trim();
@@ -129,11 +129,18 @@ export class BlogBridgeSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName(t("settingsGitHubTokenName"))
 			.setDesc(t("settingsGitHubTokenDesc"))
-			.addComponent((el) => new SecretComponent(this.app, el)
+			.addText((text) => text
+				.setPlaceholder("github-token")
 				.setValue(this.plugin.settings.githubTokenSecretName)
 				.onChange(async (value) => {
-					this.plugin.settings.githubTokenSecretName = value;
+					this.plugin.settings.githubTokenSecretName = value.trim();
 					await this.plugin.saveSettings();
+				}))
+			.addButton((button) => button
+				.setButtonText(t("settingsGitHubTokenSave"))
+				.setCta()
+				.onClick(() => {
+					new GitHubTokenModal(this.app, this.plugin, () => this.display()).open();
 				}));
 
 		new Setting(containerEl)
@@ -141,7 +148,7 @@ export class BlogBridgeSettingTab extends PluginSettingTab {
 			.setDesc(t("settingsSyncSourceDirDesc"))
 			.addDropdown((dropdown) => {
 				const folders = getVaultFolderOptions(this.app);
-				dropdown.addOption("", t("settingsAllMarkdownFiles"));
+				dropdown.addOption("", t("settingsNoSyncSourceDir"));
 				for (const folder of folders) {
 					dropdown.addOption(folder, folder);
 				}
@@ -233,6 +240,86 @@ export class BlogBridgeSettingTab extends PluginSettingTab {
 	}
 }
 
+class GitHubTokenModal extends Modal {
+	private secretName = "";
+	private token = "";
+
+	constructor(
+		app: App,
+		private readonly plugin: ObsidianBlogBridgePlugin,
+		private readonly onSaved: () => void
+	) {
+		super(app);
+		this.secretName = plugin.settings.githubTokenSecretName || "github-token";
+	}
+
+	onOpen(): void {
+		this.titleEl.setText(t("settingsGitHubTokenModalTitle"));
+		this.contentEl.empty();
+		this.contentEl.addClass("blog-bridge-token-modal");
+
+		new Setting(this.contentEl)
+			.setName(t("settingsGitHubTokenSecretName"))
+			.setDesc(t("settingsGitHubTokenSecretNameDesc"))
+			.addText((text) => text
+				.setPlaceholder("github-token")
+				.setValue(this.secretName)
+				.onChange((value) => {
+					this.secretName = value.trim();
+				}));
+
+		new Setting(this.contentEl)
+			.setName(t("settingsGitHubTokenValueName"))
+			.setDesc(t("settingsGitHubTokenValueDesc"))
+			.addText((text) => {
+				text
+					.setPlaceholder("ghp_")
+					.setValue("")
+					.onChange((value) => {
+						this.token = value.trim();
+					});
+				text.inputEl.type = "password";
+			});
+
+		const buttons = this.contentEl.createDiv({ cls: "blog-bridge-token-modal-buttons" });
+		new Setting(buttons)
+			.addButton((button) => button
+				.setButtonText(t("settingsCancel"))
+				.onClick(() => {
+					this.close();
+				}))
+			.addButton((button) => button
+				.setButtonText(t("settingsSave"))
+				.setCta()
+				.onClick(() => {
+					void this.saveToken();
+				}));
+	}
+
+	onClose(): void {
+		this.contentEl.empty();
+	}
+
+	private async saveToken(): Promise<void> {
+		const secretName = this.secretName.trim();
+		if (!isValidSecretName(secretName)) {
+			new Notice(t("errorTokenSecretNameInvalid"));
+			return;
+		}
+		if (!this.token.startsWith("ghp_")) {
+			new Notice(t("errorTokenPrefix", { prefix: "ghp_" }));
+			return;
+		}
+
+		await this.app.secretStorage.setSecret(secretName, this.token);
+		this.plugin.settings.githubTokenSecretName = secretName;
+		await this.plugin.saveSettings();
+		new Notice(t("noticeTokenSaved"));
+		this.close();
+		this.onSaved();
+	}
+}
+
 function applyFrameworkDefaults(settings: BlogBridgeSettings, previousFramework: BlogFrameworkId): void {
 	const previousPreset = frameworkPreset(previousFramework);
 	const nextPreset = frameworkPreset(settings.blogFramework);
@@ -280,4 +367,8 @@ function normalizeBranchSetting(value: string, fallback: string): string {
 		.replace(/^\/+|\/+$/g, "")
 		.replace(/\/+/g, "/");
 	return normalized || fallback;
+}
+
+function isValidSecretName(value: string): boolean {
+	return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
 }

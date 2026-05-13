@@ -61,8 +61,21 @@ export class BlogBridgeStatusView extends ItemView {
 		containerEl.addClass("blog-bridge-view");
 
 		containerEl.createEl("h2", { text: "Blog Bridge" });
+		if (!this.plugin.settings.syncSourceDir) {
+			this.renderMissingSourceDir(containerEl);
+			return;
+		}
 		this.renderFilters(containerEl);
 		this.renderList(containerEl);
+	}
+
+	private renderMissingSourceDir(containerEl: HTMLElement): void {
+		const empty = containerEl.createDiv({ cls: "blog-bridge-config-empty" });
+		empty.createDiv({ cls: "blog-bridge-config-empty-title", text: t("statusSyncSourceDirRequired") });
+		const button = empty.createEl("button", { text: t("statusOpenSettings") });
+		button.addEventListener("click", () => {
+			this.plugin.openSettings();
+		});
 	}
 
 	private renderFilters(containerEl: HTMLElement): void {

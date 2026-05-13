@@ -59,8 +59,7 @@ export default class ObsidianBlogBridgePlugin extends Plugin {
 			id: "open-settings",
 			name: t("commandOpenSettings"),
 			callback: () => {
-				(this.app as unknown as { setting: { open(): void; openTabById(id: string): void } }).setting.open();
-				(this.app as unknown as { setting: { open(): void; openTabById(id: string): void } }).setting.openTabById(this.manifest.id);
+				this.openSettings();
 			},
 		});
 
@@ -109,6 +108,12 @@ export default class ObsidianBlogBridgePlugin extends Plugin {
 				leaf.view.render();
 			}
 		}
+	}
+
+	openSettings(): void {
+		const appWithSettings = this.app as unknown as { setting: { open(): void; openTabById(id: string): void } };
+		appWithSettings.setting.open();
+		appWithSettings.setting.openTabById(this.manifest.id);
 	}
 
 	getSyncFiles(): TFile[] {

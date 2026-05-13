@@ -107,6 +107,30 @@
 	font-size: var(--font-ui-medium);
 }
 
+.blog-bridge-config-empty {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	align-items: flex-start;
+	padding: 28px 0;
+	border-top: 1px solid var(--background-modifier-border);
+	color: var(--text-muted);
+}
+
+.blog-bridge-config-empty-title {
+	color: var(--text-normal);
+	font-size: var(--font-ui-medium);
+	font-weight: 700;
+}
+
+.blog-bridge-config-empty button {
+	height: 36px;
+	border-radius: 8px;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-weight: 700;
+}
+
 .blog-bridge-bulk-actions {
 	margin: 0 0 18px;
 }
@@ -148,6 +172,9 @@
 	display: flex;
 	flex-direction: column;
 	gap: 0;
+	max-height: min(62vh, 720px);
+	overflow-y: auto;
+	padding-right: 8px;
 	border-top: 1px solid var(--background-modifier-border);
 }
 
@@ -280,6 +307,15 @@
 	border-radius: 8px;
 	background: var(--background-secondary);
 	color: var(--text-normal);
+}
+
+.blog-bridge-token-modal-buttons .setting-item {
+	border-top: 0;
+	padding: 0;
+}
+
+.blog-bridge-token-modal-buttons .setting-item-control {
+	justify-content: flex-start;
 }
 
 @media (max-width: 640px) {
