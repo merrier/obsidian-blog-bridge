@@ -1,0 +1,85 @@
+<svg width="1200" height="360" viewBox="0 0 1200 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Blog Bridge README header</title>
+  <desc id="desc">A README header for Blog Bridge, an Obsidian plugin that syncs Markdown notes to GitHub-backed static blogs.</desc>
+  <defs>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0H0V36" stroke="#D7E0EA" stroke-width="1" opacity="0.5"/>
+    </pattern>
+    <linearGradient id="wash" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7654D4" stop-opacity="0.15"/>
+      <stop offset="0.55" stop-color="#2E86DE" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#13A67B" stop-opacity="0.12"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="360" rx="28" fill="#F8FAFC"/>
+  <rect width="1200" height="360" rx="28" fill="url(#grid)"/>
+  <path d="M0 0H1200V112C1100 145 995 151 866 132C683 105 532 91 366 127C221 159 92 153 0 123V0Z" fill="url(#wash)"/>
+  <path d="M74 304C226 260 402 262 566 287C751 315 945 326 1126 268" stroke="#D7E0EA" stroke-width="2" stroke-linecap="round" opacity="0.72"/>
+
+  <g font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif">
+    <g transform="translate(72 68)">
+      <rect x="0" y="0" width="70" height="70" rx="18" fill="#2D2358"/>
+      <path d="M35 12L56 29L47 58H23L14 29L35 12Z" fill="#8D73E6"/>
+      <path d="M35 12L42 33L35 58L14 29L35 12Z" fill="#B9A7FF"/>
+      <path d="M35 12L56 29L35 58L42 33L35 12Z" fill="#6E50D8"/>
+      <text x="94" y="33" fill="#182230" font-size="44" font-weight="800">Blog Bridge</text>
+      <text x="96" y="65" fill="#4A596B" font-size="18" font-weight="500">Obsidian Markdown to GitHub static blogs</text>
+    </g>
+
+    <g transform="translate(72 178)">
+      <rect x="0" y="0" width="74" height="32" rx="16" fill="#EDE9FE"/>
+      <text x="37" y="21" text-anchor="middle" fill="#5B3BC4" font-size="14" font-weight="700">Hexo</text>
+      <rect x="84" y="0" width="78" height="32" rx="16" fill="#DCFCE7"/>
+      <text x="123" y="21" text-anchor="middle" fill="#047857" font-size="14" font-weight="700">Hugo</text>
+      <rect x="172" y="0" width="84" height="32" rx="16" fill="#E0F2FE"/>
+      <text x="214" y="21" text-anchor="middle" fill="#0369A1" font-size="14" font-weight="700">Jekyll</text>
+      <rect x="266" y="0" width="78" height="32" rx="16" fill="#FEF3C7"/>
+      <text x="305" y="21" text-anchor="middle" fill="#A16207" font-size="14" font-weight="700">Astro</text>
+      <rect x="354" y="0" width="108" height="32" rx="16" fill="#E5F4FF"/>
+      <text x="408" y="21" text-anchor="middle" fill="#0F6EA5" font-size="14" font-weight="700">VitePress</text>
+      <rect x="472" y="0" width="86" height="32" rx="16" fill="#ECFDF5"/>
+      <text x="515" y="21" text-anchor="middle" fill="#087F5B" font-size="14" font-weight="700">MkDocs</text>
+    </g>
+
+    <text x="72" y="262" fill="#59697B" font-size="17" font-weight="500">Sync notes, frontmatter, and assets into Markdown blog repos.</text>
+  </g>
+
+  <g transform="translate(666 78)">
+    <path d="M20 148C88 85 159 85 232 148C305 211 376 211 448 148" stroke="#C6D5E6" stroke-width="10" stroke-linecap="round"/>
+    <path d="M20 148C88 85 159 85 232 148C305 211 376 211 448 148" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+
+    <g transform="translate(0 42)">
+      <rect x="4" y="10" width="126" height="154" rx="18" fill="#233041" opacity="0.12"/>
+      <rect x="0" y="0" width="126" height="154" rx="18" fill="#FFFFFF" stroke="#D8E1EC"/>
+      <rect x="18" y="24" width="58" height="10" rx="5" fill="#7654D4"/>
+      <rect x="18" y="54" width="86" height="10" rx="5" fill="#E6EBF2"/>
+      <rect x="18" y="76" width="68" height="10" rx="5" fill="#E6EBF2"/>
+      <rect x="18" y="104" width="92" height="34" rx="10" fill="#F2F4F8" stroke="#DDE5EE"/>
+      <path d="M34 129L47 116L59 128L70 121L88 136H27L34 129Z" fill="#8D73E6"/>
+      <circle cx="96" cy="120" r="7" fill="#13A67B"/>
+    </g>
+
+    <g transform="translate(180 8)">
+      <rect x="4" y="10" width="126" height="154" rx="18" fill="#233041" opacity="0.12"/>
+      <rect x="0" y="0" width="126" height="154" rx="18" fill="#182230"/>
+      <rect x="18" y="24" width="90" height="106" rx="14" stroke="#34455B" stroke-width="2"/>
+      <circle cx="38" cy="54" r="9" fill="#FFFFFF"/>
+      <path d="M38 63V86" stroke="#92A2B8" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="76" cy="86" r="9" fill="#2E86DE"/>
+      <path d="M48 86H67" stroke="#92A2B8" stroke-width="4" stroke-linecap="round"/>
+      <path d="M76 95V112" stroke="#92A2B8" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="76" cy="120" r="9" fill="#13A67B"/>
+    </g>
+
+    <g transform="translate(360 52)">
+      <rect x="4" y="10" width="126" height="154" rx="18" fill="#233041" opacity="0.12"/>
+      <rect x="0" y="0" width="126" height="154" rx="18" fill="#FFFFFF" stroke="#D8E1EC"/>
+      <rect x="18" y="26" width="90" height="16" rx="8" fill="#13A67B"/>
+      <rect x="18" y="66" width="76" height="10" rx="5" fill="#E6EBF2"/>
+      <rect x="18" y="88" width="92" height="10" rx="5" fill="#E6EBF2"/>
+      <rect x="18" y="112" width="42" height="8" rx="4" fill="#CBD5E1"/>
+      <rect x="68" y="112" width="42" height="8" rx="4" fill="#DDE5EE"/>
+    </g>
+  </g>
+</svg>

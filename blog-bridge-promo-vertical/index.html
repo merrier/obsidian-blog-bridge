@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #f8fafc;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        color: #182230;
+      }
+
+      #root {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 18% 10%, rgba(118, 84, 212, 0.18), transparent 26%),
+          radial-gradient(circle at 88% 18%, rgba(46, 134, 222, 0.13), transparent 28%),
+          radial-gradient(circle at 72% 88%, rgba(19, 166, 123, 0.14), transparent 32%),
+          #f8fafc;
+      }
+
+      #root::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(215, 224, 234, 0.46) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(215, 224, 234, 0.46) 1px, transparent 1px);
+        background-size: 42px 42px;
+        mask-image: linear-gradient(150deg, rgba(0, 0, 0, 0.92), transparent 78%);
+        pointer-events: none;
+      }
+
+      .arc {
+        position: absolute;
+        left: -220px;
+        right: -220px;
+        bottom: 138px;
+        height: 250px;
+        border-top: 3px solid rgba(199, 213, 230, 0.72);
+        border-radius: 50% 50% 0 0;
+        transform: rotate(-4deg);
+      }
+
+      .clip {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+
+      .scene-content {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        padding: 92px 72px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 38px;
+      }
+
+      .eyebrow {
+        width: max-content;
+        max-width: 936px;
+        padding: 14px 20px;
+        border: 1px solid rgba(118, 84, 212, 0.22);
+        border-radius: 999px;
+        background: rgba(237, 233, 254, 0.86);
+        color: #5b3bc4;
+        font-size: 24px;
+        font-weight: 850;
+        letter-spacing: 0;
+      }
+
+      h1,
+      h2 {
+        max-width: 936px;
+        color: #182230;
+        font-size: 76px;
+        line-height: 1.02;
+        letter-spacing: 0;
+        font-weight: 850;
+      }
+
+      h2 {
+        font-size: 68px;
+        line-height: 1.05;
+      }
+
+      .subcopy {
+        max-width: 880px;
+        color: #59697b;
+        font-size: 31px;
+        line-height: 1.28;
+        font-weight: 540;
+      }
+
+      .hero-card,
+      .screen-card,
+      .node,
+      .feature,
+      .metric {
+        border: 1px solid #d7e0ea;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 26px 70px rgba(35, 48, 65, 0.13);
+      }
+
+      .hero-card,
+      .screen-card {
+        border-radius: 28px;
+        overflow: hidden;
+      }
+
+      .hero-card {
+        width: 936px;
+        padding: 18px;
+        transform: rotate(1.2deg);
+      }
+
+      .screen-card {
+        width: 936px;
+      }
+
+      .hero-card img,
+      .screen-card img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .metric-row,
+      .frameworks {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .metric,
+      .chip {
+        border-radius: 18px;
+        font-size: 24px;
+        font-weight: 800;
+      }
+
+      .metric {
+        padding: 18px 20px;
+      }
+
+      .metric strong {
+        color: #7654d4;
+      }
+
+      .pipeline {
+        display: grid;
+        gap: 18px;
+      }
+
+      .node {
+        min-height: 212px;
+        border-radius: 26px;
+        padding: 28px;
+        display: grid;
+        grid-template-columns: 1fr 1.3fr;
+        gap: 24px;
+        align-items: center;
+      }
+
+      .node-label {
+        color: #34455b;
+        font-size: 20px;
+        font-weight: 850;
+        text-transform: uppercase;
+      }
+
+      .node-title {
+        margin-top: 12px;
+        font-size: 38px;
+        line-height: 1.08;
+        font-weight: 850;
+      }
+
+      .node-lines {
+        display: grid;
+        gap: 12px;
+      }
+
+      .line {
+        height: 13px;
+        border-radius: 999px;
+        background: #e6ebf2;
+      }
+
+      .line.purple {
+        width: 52%;
+        background: #7654d4;
+      }
+
+      .line.blue {
+        width: 72%;
+        background: #2e86de;
+      }
+
+      .line.green {
+        width: 60%;
+        background: #13a67b;
+      }
+
+      .chip {
+        padding: 12px 16px;
+        border: 1px solid #d7e0ea;
+        background: rgba(255, 255, 255, 0.86);
+        color: #182230;
+      }
+
+      .feature-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+
+      .feature {
+        min-height: 146px;
+        padding: 24px;
+        border-radius: 24px;
+      }
+
+      .feature b {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 27px;
+        line-height: 1.1;
+      }
+
+      .feature span {
+        color: #59697b;
+        font-size: 21px;
+        line-height: 1.28;
+        font-weight: 540;
+      }
+
+      .cta {
+        display: inline-flex;
+        width: max-content;
+        max-width: 936px;
+        align-items: center;
+        gap: 14px;
+        padding: 20px 26px;
+        border-radius: 20px;
+        border: 1px solid #d7e0ea;
+        background: rgba(255, 255, 255, 0.9);
+        color: #182230;
+        font-size: 28px;
+        font-weight: 850;
+        box-shadow: 0 20px 54px rgba(24, 34, 48, 0.14);
+      }
+
+      .pulse-dot {
+        width: 15px;
+        height: 15px;
+        border-radius: 999px;
+        background: #13a67b;
+        box-shadow: 0 0 0 10px rgba(19, 166, 123, 0.16);
+      }
+
+      .mini-footer {
+        color: #59697b;
+        font-size: 24px;
+        font-weight: 650;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="20" data-width="1080" data-height="1920">
+      <div class="arc" data-layout-ignore></div>
+
+      <section id="scene-1" class="clip scene" data-start="0" data-duration="5" data-track-index="1">
+        <div class="scene-content">
+          <div class="eyebrow s1-item">Obsidian desktop plugin</div>
+          <h1 class="s1-item">Your notes already know how to become a blog.</h1>
+          <p class="subcopy s1-item">Blog Bridge syncs selected Markdown notes to GitHub-backed static sites with frontmatter and local images intact.</p>
+          <div class="metric-row s1-item">
+            <div class="metric"><strong>Manual</strong> sync</div>
+            <div class="metric"><strong>Local</strong> images</div>
+            <div class="metric"><strong>GitHub</strong> commits</div>
+          </div>
+          <div class="hero-card s1-card">
+            <img src="assets/readme-header.svg" alt="Blog Bridge README header" />
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-2" class="clip scene" data-start="5" data-duration="5" data-track-index="2">
+        <div class="scene-content">
+          <div class="eyebrow s2-item">One deliberate workflow</div>
+          <h2 class="s2-item">From vault to repository, without leaving Markdown.</h2>
+          <div class="pipeline">
+            <div class="node s2-node">
+              <div><div class="node-label">Obsidian</div><div class="node-title">Markdown note</div></div>
+              <div class="node-lines"><div class="line purple"></div><div class="line"></div><div class="line" style="width: 82%"></div></div>
+            </div>
+            <div class="node s2-node">
+              <div><div class="node-label">Blog Bridge</div><div class="node-title">Frontmatter, slug, images</div></div>
+              <div class="node-lines"><div class="line blue"></div><div class="line" style="width: 72%"></div><div class="line" style="width: 86%"></div></div>
+            </div>
+            <div class="node s2-node">
+              <div><div class="node-label">GitHub</div><div class="node-title">Commit or PR</div></div>
+              <div class="node-lines"><div class="line green"></div><div class="line" style="width: 70%"></div><div class="line" style="width: 78%"></div></div>
+            </div>
+          </div>
+          <p class="subcopy s2-item">Choose the note. Let Blog Bridge generate the post path, assets, commit, and optional PR.</p>
+        </div>
+      </section>
+
+      <section id="scene-3" class="clip scene" data-start="10" data-duration="5" data-track-index="3">
+        <div class="scene-content">
+          <div class="eyebrow s3-item">Built for real static sites</div>
+          <h2 class="s3-item">Presets for the blog stack you already use.</h2>
+          <div class="frameworks s3-item">
+            <span class="chip">Hexo</span><span class="chip">Hugo</span><span class="chip">Jekyll</span><span class="chip">Astro</span><span class="chip">VitePress</span><span class="chip">MkDocs</span>
+          </div>
+          <div class="screen-card s3-screen">
+            <img src="assets/settings.svg" alt="Blog Bridge settings preview" />
+          </div>
+          <div class="feature-list">
+            <div class="feature s3-feature"><b>Framework paths</b><span>Post and image directories follow each preset.</span></div>
+            <div class="feature s3-feature"><b>Clean frontmatter</b><span>Preserve metadata and fill only what is missing.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-4" class="clip scene" data-start="15" data-duration="5" data-track-index="4">
+        <div class="scene-content">
+          <div class="screen-card s4-screen">
+            <img src="assets/status-view.svg" alt="Blog Bridge status view preview" />
+          </div>
+          <div class="eyebrow s4-item">Status you can trust</div>
+          <h2 class="s4-item">See what changed. Sync only what is ready.</h2>
+          <p class="subcopy s4-item">Filter by title, tag, or sync status. Batch selected notes sequentially, then jump to the commit or PR.</p>
+          <div class="cta s4-item"><span class="pulse-dot"></span>Blog Bridge for Obsidian</div>
+          <div class="mini-footer s4-item">Manual Markdown publishing for GitHub-backed blogs.</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      gsap.set(["#scene-2", "#scene-3", "#scene-4"], { opacity: 0 });
+      tl.from(".arc", { opacity: 0, y: 36, duration: 0.7, ease: "power2.out" }, 0);
+
+      tl.from(".s1-item", { opacity: 0, y: 46, duration: 0.55, stagger: 0.12, ease: "power3.out" }, 0.25);
+      tl.from(".s1-card", { opacity: 0, y: 62, rotation: -2, scale: 0.96, duration: 0.7, ease: "power3.out" }, 0.72);
+      tl.to(".s1-card", { y: -12, duration: 3.0, ease: "sine.inOut" }, 1.45);
+      tl.to("#scene-1", { opacity: 0, y: -24, duration: 0.46, ease: "power2.in" }, 4.54);
+      tl.set("#scene-1", { opacity: 0 }, 5);
+
+      tl.set("#scene-2", { opacity: 1, y: 0 }, 5);
+      tl.from(".s2-item", { opacity: 0, x: -38, duration: 0.5, stagger: 0.12, ease: "power3.out" }, 5.12);
+      tl.from(".s2-node", { opacity: 0, y: 42, scale: 0.97, duration: 0.5, stagger: 0.16, ease: "back.out(1.4)" }, 5.52);
+      tl.to(".s2-node", { y: -8, duration: 2.4, stagger: 0.08, ease: "sine.inOut" }, 6.5);
+      tl.to("#scene-2", { opacity: 0, y: -24, duration: 0.46, ease: "power2.in" }, 9.54);
+      tl.set("#scene-2", { opacity: 0 }, 10);
+
+      tl.set("#scene-3", { opacity: 1, y: 0 }, 10);
+      tl.from(".s3-item", { opacity: 0, y: 36, duration: 0.5, stagger: 0.11, ease: "power3.out" }, 10.1);
+      tl.from(".s3-screen", { opacity: 0, y: 52, rotation: 1, scale: 0.96, duration: 0.6, ease: "power3.out" }, 10.48);
+      tl.from(".s3-feature", { opacity: 0, y: 30, scale: 0.98, duration: 0.42, stagger: 0.08, ease: "power2.out" }, 10.82);
+      tl.to(".s3-screen", { y: -10, duration: 2.92, ease: "sine.inOut" }, 11.16);
+      tl.to("#scene-3", { opacity: 0, y: -24, duration: 0.46, ease: "power2.in" }, 14.54);
+      tl.set("#scene-3", { opacity: 0 }, 15);
+
+      tl.set("#scene-4", { opacity: 1, y: 0 }, 15);
+      tl.from(".s4-screen", { opacity: 0, y: 56, rotation: -1, scale: 0.96, duration: 0.62, ease: "power3.out" }, 15.1);
+      tl.from(".s4-item", { opacity: 0, y: 38, duration: 0.5, stagger: 0.12, ease: "power3.out" }, 15.34);
+      tl.to(".pulse-dot", { scale: 1.18, duration: 0.56, repeat: 5, yoyo: true, ease: "sine.inOut" }, 16.25);
+      tl.to(".s4-screen", { y: -10, duration: 3.4, ease: "sine.inOut" }, 16.15);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
